@@ -1,0 +1,4 @@
+body { margin: 0; overflow: hidden; }
+#bg { position: fixed; top: 0; left: 0; z-index: -1; }
+#instructions { /* Kiệt tự múa ở đây */ }
+#info-box { /* Kiệt tự múa ở đây */ }
