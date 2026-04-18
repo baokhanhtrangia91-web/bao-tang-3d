@@ -1,21 +1,17 @@
-import { scene, camera, renderer } from './modules/scene.js';
-import { createEnvironment } from './modules/environment.js';
+import { setupScene } from './modules/scene.js';
+import { setupEnvironment } from './modules/environment.js';
 import { loadArtworks } from './modules/artworks.js';
-import { initControls } from './modules/controls.js';
+import { setupControls } from './modules/controls.js';
+import { setupUI } from './modules/ui.js';
 
-// 1. Chạy môi trường
-createEnvironment(scene);
+const { scene, camera, renderer } = setupScene();
+
+// Gọi hàm của tụi nó (Dù tụi nó chưa viết gì thì web vẫn chạy khung rỗng)
+setupEnvironment(scene, camera);
 loadArtworks(scene);
+setupUI();
 
-// 2. Chạy điều khiển
-const controls = initControls(camera, renderer);
-
-// 3. Xử lý nút Start (Giao nhiệm vụ cho Người 4)
-const startBtn = document.getElementById('start-btn');
-startBtn.addEventListener('click', () => {
-    document.getElementById('instructions').style.display = 'none';
-    controls.lock(); // Khóa chuột để bắt đầu đi bộ
-});
+const controls = setupControls(camera, renderer);
 
 function animate() {
     requestAnimationFrame(animate);
