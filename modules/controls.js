@@ -1,9 +1,9 @@
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
-export function initControls(camera, renderer) {
+// Đổi tên thành setupControls để khớp với main.js
+export function setupControls(camera, renderer) {
     const controls = new PointerLockControls(camera, renderer.domElement);
 
-    // trạng thái di chuyển
     const movement = {
         forward: false,
         backward: false,
@@ -11,12 +11,30 @@ export function initControls(camera, renderer) {
         right: false
     };
 
-    // click để lock chuột
-    document.addEventListener('click', () => {
-        controls.lock();
+    // Nút "Khám phá ngay" → lock chuột và ẩn màn hình chào
+    const startBtn = document.getElementById('start-btn');
+    const instructions = document.getElementById('instructions');
+    const crosshair = document.getElementById('crosshair');
+
+    if (startBtn) {
+        startBtn.addEventListener('click', () => {
+            controls.lock();
+        });
+    }
+
+    // Khi chuột được lock → ẩn instructions, hiện crosshair
+    controls.addEventListener('lock', () => {
+        if (instructions) instructions.classList.add('hidden');
+        if (crosshair) crosshair.style.display = 'block';
     });
 
-    // nhấn phím
+    // Khi nhấn ESC → hiện lại instructions
+    controls.addEventListener('unlock', () => {
+        if (instructions) instructions.classList.remove('hidden');
+        if (crosshair) crosshair.style.display = 'none';
+    });
+
+    // Nhấn phím
     document.addEventListener('keydown', (e) => {
         switch (e.code) {
             case 'KeyW': movement.forward = true; break;
@@ -26,7 +44,7 @@ export function initControls(camera, renderer) {
         }
     });
 
-    // nhả phím
+    // Nhả phím
     document.addEventListener('keyup', (e) => {
         switch (e.code) {
             case 'KeyW': movement.forward = false; break;
@@ -36,18 +54,15 @@ export function initControls(camera, renderer) {
         }
     });
 
-    // update mỗi frame
+    // Gọi mỗi frame từ main.js với giá trị delta thời gian
     function update(delta) {
+        if (!controls.isLocked) return;
         const speed = 5.0;
-
-        if (movement.forward) controls.moveForward(speed * delta);
+        if (movement.forward)  controls.moveForward(speed * delta);
         if (movement.backward) controls.moveForward(-speed * delta);
-        if (movement.left) controls.moveRight(-speed * delta);
-        if (movement.right) controls.moveRight(speed * delta);
+        if (movement.left)     controls.moveRight(-speed * delta);
+        if (movement.right)    controls.moveRight(speed * delta);
     }
 
-    return {
-        controls,
-        update
-    };
+    return { controls, update };
 }
