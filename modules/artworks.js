@@ -1,37 +1,62 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { artworkData } from '../data.js';
 
-const loader = new GLTFLoader();
+// Mảng chứa các bức tranh để tối ưu Raycaster
+export const interactableObjects = [];
 
 export function loadArtworks(scene) {
-    loader.load(
-        '/model/picture_frame.glb',
-        (gltf) => {
-            artworkData.forEach((artwork) => {
-                const frame = gltf.scene.clone();
-                frame.scale.set(1, 1, 1);
-                frame.position.set(artwork.x, artwork.y, artwork.z);
-                frame.rotation.y = artwork.rotY;
-                frame.castShadow = true;
+    function addArt(url, w, h, x, z, ry, title, desc, mediaUrl = '', mediaType = 'none', frameDepth = 0.1, frameColor = 0x111111) {
+        const group = new THREE.Group();
+        const loader = new THREE.TextureLoader();
+        const art = new THREE.Mesh(
+            new THREE.PlaneGeometry(w, h),
+            new THREE.MeshStandardMaterial({ map: loader.load(url) })
+        );
+        
+        // Lưu thông tin để UI lấy ra hiển thị
+        art.userData = { isArt: true, title, desc, mediaUrl, mediaType };
+        interactableObjects.push(art);
+        
+        // Khung tranh
+        const frame = new THREE.Mesh(
+            new THREE.BoxGeometry(w + 0.4, h + 0.4, frameDepth), 
+            new THREE.MeshStandardMaterial({color: frameColor, roughness: 0.95}) 
+        );
+        frame.castShadow = true;
+        frame.receiveShadow = true; 
+        
+        group.add(frame);
+        group.add(art);
+        
+        art.position.z = (frameDepth / 2) + 0.01;
 
-                // Gắn ảnh tranh vào mặt trước của khung
-                const textureLoader = new THREE.TextureLoader();
-                textureLoader.load(artwork.image, (texture) => {
-                    const imgMat = new THREE.MeshStandardMaterial({ map: texture });
-                    const imgMesh = new THREE.Mesh(
-                        new THREE.PlaneGeometry(1.2, 0.9),
-                        imgMat
-                    );
-                    // Đặt ảnh hơi nhô ra trước mặt khung
-                    imgMesh.position.set(0, 0, 0.06);
-                    frame.add(imgMesh);
-                });
+        // Đèn rọi tranh
+        const artLight = new THREE.SpotLight(0xffffee, 150); 
+        artLight.position.set(0, 6.9, (frameDepth / 2) + 4); 
+        artLight.angle = Math.PI / 5; 
+        artLight.penumbra = 0.6; 
+        artLight.decay = 2; 
+        artLight.distance = 12; 
+        artLight.castShadow = false; 
 
-                scene.add(frame);
-            });
-        },
-        undefined,
-        (err) => console.error('Lỗi load model khung tranh:', err)
-    );
+        const lightTarget = new THREE.Object3D();
+        lightTarget.position.set(0, 0, art.position.z); 
+        
+        group.add(artLight);
+        group.add(lightTarget);
+        artLight.target = lightTarget;
+        
+        group.position.set(x, 5, z);
+        group.rotation.y = ry;
+        scene.add(group);
+    }
+
+    // Danh sách tranh
+    addArt('texture/mona.JPG', 10, 6, 0, -24.4, 0, "Mona Lisa", "Tác phẩm kinh điển của Leonardo da Vinci.", 'audio/How the Mona Lisa became so overrated.mp3', 'video');
+    addArt('texture/the-madonna.jpg', 5, 5, -24.4, -15, Math.PI/2, "The Madonna", "Thuyết minh về sự ra đời của tác phẩm.", 'audio/madonna.mp3', 'audio');
+    addArt('texture/art3.jpg', 5, 5, -24.4, 15, Math.PI/2, "Tranh 3", "Mô tả tranh 3");
+    addArt('texture/art2.jpg', 5, 5, 24.4, -15, -Math.PI/2, "Tranh 2", "Mô tả tranh 2");
+    addArt('texture/art4.jpg', 5, 5, 24.4, 15, -Math.PI/2, "Tranh 4", "Mô tả tranh 4");
+    
+    // Bức phiến đá
+    addArt('texture/Screenshot 2026-04-11 125416.png', 7, 9, -9, 24.0, Math.PI, "Thông Tin", "thông tin thông tin thông tin", '', 'none', 1.2, 0x555555);
 }

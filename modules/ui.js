@@ -1,18 +1,42 @@
-// Module UI — hiển thị thông tin tranh, thông báo, v.v.
-
 export function setupUI() {
-    // Tạo label tên tranh (hiện khi nhìn gần)
-    const label = document.createElement('div');
-    label.id = 'artwork-label';
-    label.style.cssText = `
-        position: absolute; bottom: 60px; left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0,0,0,0.6);
-        color: #d4af37; font-family: sans-serif;
-        padding: 8px 20px; border: 1px solid #d4af37;
-        display: none; pointer-events: none;
-        font-size: 0.95rem; letter-spacing: 1px;
-    `;
-    document.body.appendChild(label);
-    return { label };
+    const instructions = document.getElementById('instructions');
+    const hudStatus = document.getElementById('status');
+    const hudPos = document.getElementById('pos');
+    const crosshair = document.getElementById('crosshair');
+    const artUI = document.getElementById('art-description');
+    const artTitle = document.getElementById('art-title');
+    const artText = document.getElementById('art-text');
+    const mediaBtn = document.getElementById('media-btn');
+    const artVideo = document.getElementById('art-video');
+    const artAudio = document.getElementById('art-audio');
+
+    function stopAllMedia() {
+        if (artVideo) {
+            artVideo.pause();
+            artVideo.src = "";
+            artVideo.style.display = 'none';
+        }
+        if (artAudio) {
+            artAudio.pause();
+            artAudio.src = "";
+        }
+    }
+
+    function playMedia(url, type) {
+        stopAllMedia();
+        if (type === 'video' && artVideo) {
+            artVideo.src = url;
+            artVideo.style.display = 'block';
+            artVideo.play();
+        } else if (type === 'audio' && artAudio) {
+            artAudio.src = url;
+            artAudio.play();
+        }
+    }
+
+    return { 
+        instructions, hudStatus, hudPos, crosshair, 
+        artUI, artTitle, artText, mediaBtn, 
+        stopAllMedia, playMedia 
+    };
 }

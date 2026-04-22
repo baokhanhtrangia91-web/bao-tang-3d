@@ -15,7 +15,7 @@ export function setupControls(camera, renderer) {
     // --- Cấu hình vật lý cho Nhảy & Trọng lực ---
     let velocityY = 0; 
     const gravity = 30.0;        // Lực hút kéo xuống
-    const jumpForce = 12.0;      // Sức bật khi nhảy
+    const jumpForce = 10.0;      // Sức bật khi nhảy
     const playerHeight = 1.6;    // Chiều cao mắt người (camera)
     let canJump = false;         // Cờ kiểm tra xem có đang ở trên mặt đất không
 
@@ -86,7 +86,7 @@ export function setupControls(camera, renderer) {
 
         // 1. Cập nhật di chuyển ngang (X, Z)
         // Nếu nhấn Shift thì tốc độ là 12, đi bộ bình thường là 5
-        const speed = movement.sprint ? 12.0 : 5.0;
+        const speed = movement.sprint ? 10.0 : 5.0;
 
         if (movement.forward)  controls.moveForward(speed * delta);
         if (movement.backward) controls.moveForward(-speed * delta);
