@@ -1,9 +1,9 @@
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 
-export function setupControls(camera, renderer) {
+export function setupControls(camera, renderer, collidableWalls = []) {
     const controls = new PointerLockControls(camera, renderer.domElement);
 
-    // Thêm trạng thái sprint vào movement
     const movement = {
         forward: false,
         backward: false,
@@ -14,12 +14,15 @@ export function setupControls(camera, renderer) {
 
     // --- Cấu hình vật lý cho Nhảy & Trọng lực ---
     let velocityY = 0; 
-    const gravity = 30.0;        // Lực hút kéo xuống
-    const jumpForce = 10.0;      // Sức bật khi nhảy
-    const playerHeight = 1.6;    // Chiều cao mắt người (camera)
-    let canJump = false;         // Cờ kiểm tra xem có đang ở trên mặt đất không
+    const gravity = 30.0;        
+    const jumpForce = 10.0;      
+    const playerHeight = 1.6;    
+    let canJump = false;         
 
-    // Đặt vị trí Y ban đầu cho camera
+    // CẤU HÌNH RAYCASTER CHO VA CHẠM
+    const raycaster = new THREE.Raycaster();
+    const playerRadius = 1.0; // Bán kính cơ thể: Tăng lên 1.2 hoặc 1.5 nếu vẫn lọt tường
+
     camera.position.y = playerHeight;
 
     // Các element UI
@@ -43,65 +46,102 @@ export function setupControls(camera, renderer) {
         if (crosshair) crosshair.style.display = 'none';
     });
 
-    // Bắt sự kiện nhấn phím
+    // Bắt sự kiện phím
     document.addEventListener('keydown', (e) => {
         switch (e.code) {
             case 'KeyW': movement.forward = true; break;
             case 'KeyS': movement.backward = true; break;
             case 'KeyA': movement.left = true; break;
             case 'KeyD': movement.right = true; break;
-            
-            // Nhấn Shift để chạy
             case 'ShiftLeft':
-            case 'ShiftRight':
-                movement.sprint = true; break;
-                
-            // Nhấn Space để nhảy
+            case 'ShiftRight': movement.sprint = true; break;
             case 'Space':
                 if (canJump === true) {
-                    velocityY = jumpForce; // Cung cấp lực đẩy lên
-                    canJump = false;       // Đang ở trên không nên không thể nhảy tiếp
+                    velocityY = jumpForce; 
+                    canJump = false;       
                 }
                 break;
         }
     });
 
-    // Bắt sự kiện nhả phím
     document.addEventListener('keyup', (e) => {
         switch (e.code) {
             case 'KeyW': movement.forward = false; break;
             case 'KeyS': movement.backward = false; break;
             case 'KeyA': movement.left = false; break;
             case 'KeyD': movement.right = false; break;
-            
-            // Nhả Shift thì ngừng chạy nhanh
             case 'ShiftLeft':
-            case 'ShiftRight':
-                movement.sprint = false; break;
+            case 'ShiftRight': movement.sprint = false; break;
         }
     });
+
+    // Các vector 8 hướng để tạo thành "lá chắn" quanh người chơi
+    const directions = [
+        new THREE.Vector3(1, 0, 0),   // Phải
+        new THREE.Vector3(-1, 0, 0),  // Trái
+        new THREE.Vector3(0, 0, 1),   // Lùi
+        new THREE.Vector3(0, 0, -1),  // Tiến
+        new THREE.Vector3(0.707, 0, 0.707),   // Chéo
+        new THREE.Vector3(-0.707, 0, 0.707),  // Chéo
+        new THREE.Vector3(0.707, 0, -0.707),  // Chéo
+        new THREE.Vector3(-0.707, 0, -0.707)  // Chéo
+    ];
 
     function update(delta) {
         if (!controls.isLocked) return;
 
-        // 1. Cập nhật di chuyển ngang (X, Z)
-        // Nếu nhấn Shift thì tốc độ là 12, đi bộ bình thường là 5
         const speed = movement.sprint ? 10.0 : 5.0;
+        const actualMoveSpeed = speed * delta;
 
-        if (movement.forward)  controls.moveForward(speed * delta);
-        if (movement.backward) controls.moveForward(-speed * delta);
-        if (movement.left)     controls.moveRight(-speed * delta);
-        if (movement.right)    controls.moveRight(speed * delta);
+        // 1. LƯU LẠI VỊ TRÍ CŨ TRƯỚC KHI BƯỚC ĐI
+        const oldX = camera.position.x;
+        const oldZ = camera.position.z;
 
-        // 2. Cập nhật di chuyển dọc (Y) cho Nhảy và Trọng lực
-        velocityY -= gravity * delta;             // Trọng lực kéo velocityY xuống dần đều theo thời gian
-        camera.position.y += velocityY * delta;   // Áp dụng vận tốc Y vào vị trí camera
+        // 2. THỰC HIỆN BƯỚC ĐI
+        if (movement.forward) controls.moveForward(actualMoveSpeed);
+        if (movement.backward) controls.moveForward(-actualMoveSpeed);
+        if (movement.left) controls.moveRight(-actualMoveSpeed);
+        if (movement.right) controls.moveRight(actualMoveSpeed);
 
-        // 3. Xử lý va chạm với mặt đất
+        // 3. KIỂM TRA VA CHẠM TẠI VỊ TRÍ MỚI
+        if (collidableWalls && collidableWalls.length > 0) {
+            // Lấy tâm bắn tia là vị trí mới, hạ xuống ngang hông (0.8m)
+            const origin = camera.position.clone();
+            origin.y = playerHeight / 2; 
+
+            let isHit = false;
+
+            // Quét 8 tia xung quanh người
+            for (let i = 0; i < directions.length; i++) {
+                raycaster.set(origin, directions[i]);
+                const intersects = raycaster.intersectObjects(collidableWalls, false);
+                
+                // Nếu có tường cản và cự ly nhỏ hơn bán kính cơ thể -> Chạm tường
+                if (intersects.length > 0 && intersects[0].distance < playerRadius) {
+                    isHit = true;
+                    break; 
+                }
+            }
+
+            // 4. NẾU CHẠM TƯỜNG -> DỊCH CHUYỂN NGƯỢC LẠI VỊ TRÍ CŨ
+            if (isHit) {
+                camera.position.x = oldX;
+                camera.position.z = oldZ;
+            }
+        } else {
+            // Nếu bạn thấy dòng này hiện trong Console (F12), nghĩa là main.js truyền mảng bị sai
+            console.warn("CẢNH BÁO: Mảng collidableWalls đang trống!");
+        }
+
+        // --- Cập nhật Nhảy và Trọng lực ---
+        velocityY -= gravity * delta;             
+        camera.position.y += velocityY * delta;   
+
+        // Chốt chặt chân trên mặt đất
         if (camera.position.y <= playerHeight) {
-            camera.position.y = playerHeight; // Chốt chặt ở mặt đất
-            velocityY = 0;                    // Dừng rơi
-            canJump = true;                   // Chạm đất rồi thì được nhảy lại
+            camera.position.y = playerHeight; 
+            velocityY = 0;                    
+            canJump = true;                   
         }
     }
 

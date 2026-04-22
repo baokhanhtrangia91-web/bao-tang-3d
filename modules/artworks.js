@@ -58,5 +58,5 @@ export function loadArtworks(scene) {
     addArt('texture/art4.jpg', 5, 5, 24.4, 15, -Math.PI/2, "Tranh 4", "Mô tả tranh 4");
     
     // Bức phiến đá
-    addArt('texture/Screenshot 2026-04-11 125416.png', 7, 9, -9, 24.0, Math.PI, "Thông Tin", "thông tin thông tin thông tin", '', 'none', 1.2, 0x555555);
+    addArt('texture/Screenshot 2026-04-11 125416.png', 7, 9.5, -9.5, 28.5, Math.PI, "Thông Tin", "thông tin thông tin thông tin", '', 'none', 1.2, 0x555555);
 }

@@ -6,12 +6,13 @@ import { setupControls }    from './modules/controls.js';
 import { setupUI }          from './modules/ui.js';
 
 const { scene, camera, renderer } = setupScene();
+const { collidableWalls } = setupEnvironment(scene);
 
 setupEnvironment(scene);   // FIX: truyền đúng tham số (chỉ scene)
 loadArtworks(scene);
 setupUI();
 
-const { controls, update: updateControls } = setupControls(camera, renderer);
+const { controls, update: updateControls } = setupControls(camera, renderer, collidableWalls);
 
 // Clock để tính delta time chính xác
 const clock = new THREE.Clock();
