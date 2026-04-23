@@ -130,17 +130,54 @@ export function setupEnvironment(scene) {
     addArch(8, WALL_THICK,   0, 6, 15,   0);
     addWall(15,         H, WALL_THICK,  31.5,  -5);
 
-    // --- Bục trưng bày ---
+   // --- Bục trưng bày  ---
     const statueZ = -7;
-    const pedestal = new THREE.Mesh(
-        new THREE.BoxGeometry(7, 1.5, 7),
-        new THREE.MeshStandardMaterial({ color: 0xdddddd })
+    const pedestalGroup = new THREE.Group();
+    
+    // 1. Khối đế chính
+    const pedestalBase = new THREE.Mesh(
+        new THREE.BoxGeometry(7, 1.4, 7),
+        new THREE.MeshStandardMaterial({ 
+            color: 0xdddddd, 
+            roughness: 0.15, 
+            metalness: 0.2   
+        })
     );
-    pedestal.position.set(0, 0.75, statueZ);
-    pedestal.castShadow = pedestal.receiveShadow = true;
-    scene.add(pedestal);
+    pedestalBase.position.set(0, 0.7, 0); 
+    pedestalBase.castShadow = pedestalBase.receiveShadow = true;
+    pedestalGroup.add(pedestalBase);
 
-    // Đèn rọi tượng
+    // 2. Phào chỉ trên: Vàng đồng cổ (Antique Gold / Bronze)
+    const goldMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xc5a059, // Mã màu vàng đồng đặc trưng Phục hưng
+        roughness: 0.25, // Bóng vừa phải, không bị rợ như gương
+        metalness: 0.85  // Tính kim loại rất cao
+    });
+
+    const pedestalTop = new THREE.Mesh(
+        new THREE.BoxGeometry(7.4, 0.2, 7.4), 
+        goldMaterial
+    );
+    pedestalTop.position.set(0, 1.5, 0); 
+    pedestalTop.castShadow = pedestalTop.receiveShadow = true;
+    pedestalGroup.add(pedestalTop);
+
+    // 3. Phào chỉ dưới: Dùng chung vật liệu Vàng đồng
+    const pedestalBottom = new THREE.Mesh(
+        new THREE.BoxGeometry(7.4, 0.2, 7.4),
+        goldMaterial
+    );
+    pedestalBottom.position.set(0, 0.1, 0);
+    pedestalBottom.castShadow = pedestalBottom.receiveShadow = true;
+    pedestalGroup.add(pedestalBottom);
+
+    pedestalGroup.position.set(0, 0, statueZ);
+    scene.add(pedestalGroup);
+
+    // Va chạm
+    collidableWalls.push(pedestalBase);
+
+    // --- Đèn rọi tượng ---
     const statueLight = new THREE.SpotLight(0xfff0dd, 800);
     statueLight.position.set(5, 14, statueZ + 15);
     statueLight.angle    = Math.PI / 4.5;
@@ -155,11 +192,11 @@ export function setupEnvironment(scene) {
 
     // Model tượng
     new GLTFLoader().load(
-        'model/ghe_dai.glb',
+        'model/da_vinci_tank.glb',
         (gltf) => {
             const model = gltf.scene;
             model.position.set(0, 1.5, statueZ);
-            model.scale.setScalar(4);
+            model.scale.setScalar(80);
             model.traverse(n => { if (n.isMesh) n.castShadow = true; });
             scene.add(model);
         },

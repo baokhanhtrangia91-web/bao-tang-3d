@@ -5,7 +5,14 @@ export const interactableObjects = [];
 export function loadArtworks(scene) {
     const loader = new THREE.TextureLoader();
 
-    function addArt(url, w, h, x, z, ry, title, desc, mediaUrl = '', mediaType = 'none', frameDepth = 0.1, frameColor = 0x111111) {
+    // 1. Hàm addArt mới: Nhận vào một Object { ... } thay vì các tham số rời rạc
+    function addArt({
+        url, w, h, 
+        x, y = 5, z, ry = 0, // y mặc định là 5 nếu không được khai báo
+        title = '', desc = '', 
+        mediaUrl = '', mediaType = 'none', 
+        frameDepth = 0.1, frameColor = 0x111111
+    }) {
         const group = new THREE.Group();
 
         // Mặt tranh
@@ -26,37 +33,80 @@ export function loadArtworks(scene) {
 
         art.position.z = frameDepth / 2 + 0.01;
 
-        // Đèn rọi tranh
-        const spotLight = new THREE.SpotLight(0xffffee, 150);
-        spotLight.position.set(0, 6.9, frameDepth / 2 + 4);
-        spotLight.angle    = Math.PI / 5;
-        spotLight.penumbra = 0.6;
-        spotLight.decay    = 2;
-        spotLight.distance = 12;
-        spotLight.castShadow = false;
-
-        const lightTarget = new THREE.Object3D();
-        lightTarget.position.set(0, 0, art.position.z);
-        spotLight.target = lightTarget;
-
-        group.add(frame, art, spotLight, lightTarget);
-        group.position.set(x, 5, z);
+        group.add(frame, art);
+        group.position.set(x, y, z);
         group.rotation.y = ry;
         scene.add(group);
     }
 
-    // --- Danh sách tác phẩm ---
-    addArt('texture/mona.JPG',       10, 6,  0,     -24.4,  0,           'Mona Lisa',   'Tác phẩm kinh điển của Leonardo da Vinci.',  'audio/How the Mona Lisa became so overrated.mp3', 'video');
-    addArt('texture/the-madonna.jpg', 5, 5, -24.4, -15,     Math.PI/2,   'The Madonna', 'Thuyết minh về sự ra đời của tác phẩm.',     'audio/madonna.mp3', 'audio');
-    addArt('texture/art3.jpg',        5, 5, -24.4,  15,     Math.PI/2,   'Tranh 3',     'Mô tả tranh 3');
-    addArt('texture/art2.jpg',        5, 5,  24.4, -15,    -Math.PI/2,   'Tranh 2',     'Mô tả tranh 2');
-    addArt('texture/art4.jpg',        5, 5,  24.4,  15,    -Math.PI/2,   'Tranh 4',     'Mô tả tranh 4');
+    // 2. Danh sách tranh
+    const galleryData = [
+        // Tường phía sau
+        { url: 'tranh/tranh1.jpg', w: 6, h: 4, x: -25, y: 5, z: -28.9, ry: 0, title: 'tranh 1', desc: 'Mô tả tranh 1' },
+        { url: 'tranh/tranh2.jpg', w: 5, h: 7, x: -10, y: 5, z: -28.9, ry: 0, title: 'tranh 2', desc: 'Mô tả tranh 2' },
+        { url: 'tranh/tranh3.jpg', w: 8, h: 5, x:  5, y: 6, z: -28.9, ry: 0, title: 'tranh 3', desc: 'Mô tả tranh 3' },
+        { url: 'tranh/tranh4.jpg', w: 5, h: 5, x:  25, y: 5, z: -28.9, ry: 0, title: 'tranh 4', desc: 'Mô tả tranh 4' },
 
-    // Bức phiến đá thông tin
-    addArt(
-        'model/bang.jpg',
-        3, 9.5, -13.5, 25.9, Math.PI/2,
-        'Thông Tin', 'thông tin thông tin thông tin',
-        '', 'none', 1.1, 0x555555
-    );
+        // Tường bên trái
+        { url: 'tranh/tranh5.jpg', w: 6, h: 4, x: -38.9, y: 5, z: -15, ry: Math.PI/2, title: 'tranh 5', desc: 'Mô tả tranh 5' },
+        { url: 'tranh/tranh6.jpg', w: 4, h: 6, x: -38.9, y: 4, z:   0, ry: Math.PI/2, title: 'tranh 6', desc: 'Mô tả tranh 6' },
+        { url: 'tranh/tranh7.jpg', w: 7, h: 4, x: -38.9, y: 5, z:  15, ry: Math.PI/2, title: 'tranh 7', desc: 'Mô tả tranh 7' },
+
+        // Tường bên phải
+        { url: 'tranh/tranh8.jpg', w: 5, h: 5, x: 38.9, y: 5, z: -15, ry: -Math.PI/2, title: 'tranh 8', desc: 'Mô tả tranh 8' },
+        { url: 'tranh/tranh9.jpg', w: 8, h: 4, x: 38.9, y: 5, z:   0, ry: -Math.PI/2, title: 'tranh 9', desc: 'Mô tả tranh 9' },
+        { url: 'tranh/tranh10.jpg', w: 5, h: 7, x: 38.9, y: 5, z:  15, ry: -Math.PI/2, title: 'tranh 10', desc: 'Mô tả tranh 10' },
+
+        // Vách ngăn trong
+        { url: 'tranh/tranh11.jpg', w: 4, h: 4, x: -13.4, y: 5, z: -20, ry: Math.PI/2, title: 'tranh 11', desc: 'Mô tả tranh 11' },
+        { url: 'tranh/tranh12.jpg', w: 5, h: 3, x: -13.4, y: 5, z: -10, ry: Math.PI/2, title: 'tranh 12', desc: 'Mô tả tranh 12' },
+        { url: 'tranh/tranh13.jpg', w: 4, h: 4, x: 13.4, y: 5, z: -20, ry: -Math.PI/2, title: 'tranh 13', desc: 'Mô tả tranh 13' },
+        { url: 'tranh/tranh14.jpg', w: 4, h: 5, x: 13.4, y: 5, z: -10, ry: -Math.PI/2, title: 'tranh 14', desc: 'Mô tả tranh 14' },
+    ];
+
+    // Truyền thẳng Object item vào hàm
+    galleryData.forEach(item => {
+        addArt(item);
+    });
+
+    // 3. Bảng thông tin trung tâm 
+    addArt({
+        url: 'model/bang.jpg',
+        w: 3, 
+        h: 4.24, 
+        x: -13.5, 
+        y: 2.4,         
+        z: 27.16, 
+        ry: Math.PI/2,
+        title: 'Thông Tin', 
+        desc: 'Khu vực trưng bày chính.',
+        frameDepth: 0.6, 
+        frameColor: 0x555555
+    });
+    addArt({
+        url: 'model/bang.jpg',
+        w: 3, 
+        h: 4.24, 
+        x: 13.5, 
+        y: 2.4,         
+        z: 27.16, 
+        ry: (Math.PI * 3) / 2,
+        title: 'Thông Tin', 
+        desc: 'Khu vực trưng bày chính.',
+        frameDepth: 0.6, 
+        frameColor: 0x555555
+    });
+    addArt({
+        url: 'model/bang.jpg',
+        w: 6, 
+        h: 8.4, 
+        x: 10.25, 
+        y: 4.42,         
+        z: 15.8, 
+        ry: Math.PI*2,
+        title: 'Thông Tin', 
+        desc: 'Khu vực trưng bày chính.',
+        frameDepth: 0.6, 
+        frameColor: 0x555555
+    });
 }
