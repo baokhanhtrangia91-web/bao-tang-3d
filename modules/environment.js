@@ -11,11 +11,11 @@ export function setupEnvironment(scene) {
     const loader = new THREE.TextureLoader();
 
     // --- Textures ---
-    const floorTex = loader.load('model/O5GLMS0.jpg');
+    const floorTex = loader.load('model/go2.jpg');
     floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
     floorTex.repeat.set(32, 24);
 
-    const wallTex = loader.load('model/5e213a83-fbce-4f0d-9672-c38746ffe175.jpg');
+    const wallTex = loader.load('model/tuong.jpg');
     wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
     wallTex.repeat.set(8, 2);
     const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, color: 0xdddddd, roughness: 1.0 });
@@ -23,12 +23,12 @@ export function setupEnvironment(scene) {
     const ceilingTex = loader.load('model/trần gỗ.jpg');
     ceilingTex.wrapS = ceilingTex.wrapT = THREE.RepeatWrapping;
     ceilingTex.repeat.set(32, 24);
-    const ceilingMat = new THREE.MeshStandardMaterial({ map: ceilingTex, color: 0xffffff, roughness: 1.0 });
+    const ceilingMat = new THREE.MeshStandardMaterial({ map: ceilingTex, color: 0xffffff, roughness: 0.5 });
 
     const woodTex = ceilingTex.clone();
     woodTex.needsUpdate = true;
     woodTex.repeat.set(2, 2);
-    const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, color: 0xdddddd, roughness: 0.9 });
+    const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, color: 0xdddddd, roughness: 0.5 });
 
     // --- Ánh sáng nền ---
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
@@ -38,7 +38,7 @@ export function setupEnvironment(scene) {
     // --- Sàn ---
     const floor = new THREE.Mesh(
         new THREE.PlaneGeometry(W, D),
-        new THREE.MeshStandardMaterial({ map: floorTex, color: 0xdddddd, roughness: 0.8 })
+        new THREE.MeshStandardMaterial({ map: floorTex, color: 0xdddddd, roughness: 0.35 })
     );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;

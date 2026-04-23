@@ -15,7 +15,7 @@ export function setupControls(camera, renderer, collidableWalls = []) {
     let velocityY   = 0;
     const gravity     = 30.0;
     const jumpForce   = 10.0;
-    const playerHeight = 1.6;
+    const playerHeight = 1.9;
     let canJump = false;
 
     const raycaster    = new THREE.Raycaster();

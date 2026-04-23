@@ -54,7 +54,7 @@ export function loadArtworks(scene) {
 
     // Bức phiến đá thông tin
     addArt(
-        'model/z7754643348348_8881844be1db1ee3df4752a2dfa1b8a0.jpg',
+        'model/bang.jpg',
         3, 9.5, -13.5, 25.9, Math.PI/2,
         'Thông Tin', 'thông tin thông tin thông tin',
         '', 'none', 1.1, 0x555555
