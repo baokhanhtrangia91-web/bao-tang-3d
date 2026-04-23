@@ -14,6 +14,7 @@
             height: 100vh;
         }
 
+        /* --- Màn hình hướng dẫn ban đầu --- */
         #instructions {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -33,7 +34,7 @@
             max-width: 400px;
         }
         .content h1 { font-size: 1.6rem; margin-bottom: 16px; color: #d4af37; }
-        .content p { margin-bottom: 8px; line-height: 1.6; }
+        .content p  { margin-bottom: 8px; line-height: 1.6; }
         #start-btn {
             background: #d4af37; border: none; padding: 12px 28px;
             cursor: pointer; font-weight: bold; font-size: 1rem;
@@ -41,6 +42,7 @@
         }
         #start-btn:hover { background: #f0c842; }
 
+        /* --- Chữ thập ngắm giữa màn hình --- */
         #crosshair {
             position: absolute;
             top: 50%; left: 50%;
@@ -56,22 +58,63 @@
         }
         #crosshair::before { width: 2px; height: 100%; left: 7px; top: 0; }
         #crosshair::after  { width: 100%; height: 2px; top: 7px; left: 0; }
+
+        /* --- Bảng thông tin tranh --- */
+        #art-description {
+            position: absolute;
+            bottom: 40px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            border: 1px solid #d4af37;
+            padding: 16px 24px;
+            max-width: 480px;
+            font-family: sans-serif;
+            display: none;
+            text-align: center;
+        }
+        #art-title { font-size: 1.1rem; color: #d4af37; margin-bottom: 6px; }
+        #art-text  { font-size: 0.9rem; line-height: 1.5; }
+        #media-btn {
+            margin-top: 10px;
+            background: #d4af37; border: none;
+            padding: 8px 20px; cursor: pointer;
+            font-weight: bold; display: none;
+        }
+        #art-video {
+            margin-top: 10px;
+            max-width: 100%;
+            display: none;
+        }
+        #art-audio { display: none; }
     </style>
 </head>
 <body>
     <canvas id="bg"></canvas>
 
+    <!-- Màn hình hướng dẫn -->
     <div id="instructions">
         <div class="content">
             <h1>🏛️ BẢO TÀNG NGHỆ THUẬT VIRTUAL</h1>
             <p>Di chuyển: <b>W, A, S, D</b></p>
             <p>Nhìn xung quanh: <b>Di chuyển chuột</b></p>
+            <p>Chạy: <b>Shift</b> | Nhảy: <b>Space</b></p>
             <p>Thoát: <b>ESC</b></p>
             <button id="start-btn">KHÁM PHÁ NGAY</button>
         </div>
     </div>
 
+    <!-- Chữ thập ngắm -->
     <div id="crosshair"></div>
+
+    <!-- Bảng thông tin tác phẩm -->
+    <div id="art-description">
+        <div id="art-title"></div>
+        <div id="art-text"></div>
+        <button id="media-btn">▶ Phát media</button>
+        <video id="art-video" controls></video>
+        <audio id="art-audio"></audio>
+    </div>
 
     <script type="module" src="/main.js"></script>
 </body>
