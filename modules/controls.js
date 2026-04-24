@@ -40,17 +40,23 @@ export function setupControls(camera, renderer, collidableWalls = []) {
     const startBtn    = document.getElementById('start-btn');
     const instructions = document.getElementById('instructions');
     const crosshair   = document.getElementById('crosshair');
+    const minimapDOM  = document.getElementById('minimap-container'); 
+    const coordsDOM   = document.getElementById('coords-ui'); // <-- Thêm dòng này
 
     startBtn?.addEventListener('click', () => controls.lock());
 
     controls.addEventListener('lock', () => {
         instructions?.classList.add('hidden');
         if (crosshair) crosshair.style.display = 'block';
+        if (minimapDOM) minimapDOM.style.display = 'block'; 
+        if (coordsDOM) coordsDOM.style.display = 'block'; // <-- Hiện tọa độ
     });
 
     controls.addEventListener('unlock', () => {
         instructions?.classList.remove('hidden');
         if (crosshair) crosshair.style.display = 'none';
+        if (minimapDOM) minimapDOM.style.display = 'none'; 
+        if (coordsDOM) coordsDOM.style.display = 'none'; // <-- Ẩn tọa độ
     });
 
     // --- Phím điều khiển ---

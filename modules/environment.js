@@ -405,61 +405,7 @@ export function setupEnvironment(scene) {
     addFloorLamp( -5,  24);
     addFloorLamp(  5,  24);
 
-    // =====================================================
-    // HÀM TẠO CÂY TRANG TRÍ
-    // =====================================================
-    function addDecorativePlant(x, z, scale = 1) {
-        const g = new THREE.Group();
-
-        // Chậu
-        const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.22 * scale, 0.18 * scale, 0.4 * scale, 16), potMat);
-        pot.position.set(0, 0.2 * scale, 0);
-        pot.castShadow = pot.receiveShadow = true;
-        g.add(pot);
-
-        // Đất trong chậu
-        const soil = new THREE.Mesh(new THREE.CylinderGeometry(0.2 * scale, 0.2 * scale, 0.05 * scale, 16),
-            new THREE.MeshStandardMaterial({ color: 0x3a2410, roughness: 1.0 }));
-        soil.position.set(0, 0.4 * scale, 0);
-        g.add(soil);
-
-        // Lá tán cây (nhiều quả cầu)
-        const leafPositions = [
-            [0, 1.2, 0], [-0.18, 1.0, 0.12], [0.2, 0.9, -0.1],
-            [0.1, 1.35, -0.15], [-0.12, 1.15, -0.18], [0, 0.8, 0.2],
-        ];
-        for (const [lx, ly, lz] of leafPositions) {
-            const leaf = new THREE.Mesh(
-                new THREE.SphereGeometry((0.15 + Math.random() * 0.08) * scale, 8, 8),
-                new THREE.MeshStandardMaterial({ color: 0x1e5c1e + Math.floor(Math.random() * 0x102020), roughness: 0.95 })
-            );
-            leaf.position.set(lx * scale, ly * scale, lz * scale);
-            leaf.castShadow = true;
-            g.add(leaf);
-        }
-
-        // Thân cây
-        const trunk = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.04 * scale, 0.06 * scale, 0.8 * scale, 8),
-            new THREE.MeshStandardMaterial({ color: 0x5c3d1a, roughness: 0.9 })
-        );
-        trunk.position.set(0, 0.6 * scale, 0);
-        trunk.castShadow = true;
-        g.add(trunk);
-
-        g.position.set(x, 0, z);
-        scene.add(g);
-    }
-
-    // Cây ở các góc phòng
-    addDecorativePlant(-37,  25, 1.3);
-    addDecorativePlant( 37,  25, 1.3);
-    addDecorativePlant(-37, -27, 1.1);
-    addDecorativePlant( 37, -27, 1.1);
-    addDecorativePlant( -2, -27, 1.2);
-    addDecorativePlant(  2, -27, 1.2);
-    addDecorativePlant( 32,  25, 0.9);
-    addDecorativePlant(-32,  25, 0.9);
+    
 
     // =====================================================
     // CỘT TRANG TRÍ (PILLAR / COLUMN)
@@ -516,18 +462,6 @@ export function setupEnvironment(scene) {
         base.position.set(0, 0.04, 0);
         g.add(base);
 
-        // Vật nhỏ trên bục
-        const artifact = new THREE.Mesh(
-            new THREE.IcosahedronGeometry(0.15, 1),
-            new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.1, metalness: 0.9 })
-        );
-        artifact.position.set(0, height + 0.2, 0);
-        artifact.castShadow = true;
-        g.add(artifact);
-
-        g.position.set(x, 0, z);
-        scene.add(g);
-        collidableWalls.push(body);
     }
 
     // Bục trưng bày nhỏ ở các phòng

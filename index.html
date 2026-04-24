@@ -59,6 +59,20 @@
         #crosshair::before { width: 2px; height: 100%; left: 7px; top: 0; }
         #crosshair::after  { width: 100%; height: 2px; top: 7px; left: 0; }
 
+       #coords-ui {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        border: 1px solid #00ff00; /* Viền xanh lá kiểu debug */
+        color: #00ff00;
+        padding: 8px 15px;
+        font-family: monospace;
+        font-size: 14px;
+        z-index: 5;
+        pointer-events: none;
+        display: none; /* Ẩn lúc đầu */
+    }
         /* --- Bảng thông tin tranh --- */
         #art-description {
             position: absolute;
@@ -104,6 +118,7 @@
         </div>
     </div>
 
+    <div id="coords-ui">X: 0.00 | Y: 0.00 | Z: 0.00</div>
     <!-- Chữ thập ngắm -->
     <div id="crosshair"></div>
 
@@ -115,6 +130,7 @@
         <video id="art-video" controls></video>
         <audio id="art-audio"></audio>
     </div>
+    
 
     <script type="module" src="/main.js"></script>
 </body>
