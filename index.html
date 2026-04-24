@@ -14,7 +14,7 @@
             height: 100vh;
         }
 
-        /* --- Màn hình hướng dẫn ban đầu --- */
+        /* --- Màn hình hướng dẫn --- */
         #instructions {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -42,7 +42,7 @@
         }
         #start-btn:hover { background: #f0c842; }
 
-        /* --- Chữ thập ngắm giữa màn hình --- */
+        /* --- Chữ thập ngắm --- */
         #crosshair {
             position: absolute;
             top: 50%; left: 50%;
@@ -54,31 +54,51 @@
         #crosshair::before, #crosshair::after {
             content: '';
             position: absolute;
-            background: rgba(255,255,255,0.8);
+            background: rgba(255, 255, 255, 0.8);
         }
         #crosshair::before { width: 2px; height: 100%; left: 7px; top: 0; }
         #crosshair::after  { width: 100%; height: 2px; top: 7px; left: 0; }
 
-       #coords-ui {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        background: rgba(0, 0, 0, 0.7);
-        border: 1px solid #00ff00; /* Viền xanh lá kiểu debug */
-        color: #00ff00;
-        padding: 8px 15px;
-        font-family: monospace;
-        font-size: 14px;
-        z-index: 5;
-        pointer-events: none;
-        display: none; /* Ẩn lúc đầu */
-    }
-        /* --- Bảng thông tin tranh --- */
+        #screenshot-btn {
+            position: absolute;
+            top: 20px; 
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            border: 1px solid #d4af37;
+            padding: 10px 16px;
+            font-family: sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 5; /* Nằm dưới màn hình hướng dẫn lúc mới vào */
+            transition: all 0.3s ease;
+        }
+        #screenshot-btn:hover {
+            background: #d4af37;
+            color: #000;
+        }
+        /* --- Tọa độ debug --- */
+        #coords-ui {
+            position: absolute;
+            bottom: 20px; left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 8px 15px;
+            font-family: monospace;
+            font-size: 14px;
+            z-index: 5;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* --- Bảng thông tin tác phẩm --- */
         #art-description {
             position: absolute;
             bottom: 40px; left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.75);
+            background: rgba(0, 0, 0, 0.75);
             color: #fff;
             border: 1px solid #d4af37;
             padding: 16px 24px;
@@ -106,23 +126,22 @@
 <body>
     <canvas id="bg"></canvas>
 
-    <!-- Màn hình hướng dẫn -->
     <div id="instructions">
         <div class="content">
             <h1>🏛️ BẢO TÀNG NGHỆ THUẬT VIRTUAL</h1>
             <p>Di chuyển: <b>W, A, S, D</b></p>
             <p>Nhìn xung quanh: <b>Di chuyển chuột</b></p>
-            <p>Chạy: <b>Shift</b> | Nhảy: <b>Space</b> | Zoom: <b>Z</b></p>
+            <p>Chạy: <b>Shift</b> | Ngồi: <b>Ctrl</b> | Nhảy: <b>Space</b> | Zoom: <b>Z</b></p>
             <p>Thoát: <b>ESC</b></p>
             <button id="start-btn">KHÁM PHÁ NGAY</button>
         </div>
     </div>
 
     <div id="coords-ui">X: 0.00 | Y: 0.00 | Z: 0.00</div>
-    <!-- Chữ thập ngắm -->
     <div id="crosshair"></div>
 
-    <!-- Bảng thông tin tác phẩm -->
+    <button id="screenshot-btn" title="Phím tắt: R">📷 Chụp ảnh (R)</button>
+
     <div id="art-description">
         <div id="art-title"></div>
         <div id="art-text"></div>
@@ -130,7 +149,6 @@
         <video id="art-video" controls></video>
         <audio id="art-audio"></audio>
     </div>
-    
 
     <script type="module" src="/main.js"></script>
 </body>
