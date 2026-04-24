@@ -89,13 +89,7 @@ export function setupEnvironment(scene) {
 
         addBoxCollider(w, h, d, x, h / 2, z);
 
-        const bbW = w > d ? w : 0.12;
-        const bbD = d > w ? d : 0.12;
-        const bb = new THREE.Mesh(new THREE.BoxGeometry(bbW, 0.25, bbD + 0.05), baseboardMat);
-        bb.position.set(x, 0.125, z);
-        bb.castShadow = false; 
-        bb.receiveShadow = false;
-        scene.add(bb);
+        
     }
 
     // === HELPER: VÒNG CUỐN ===
@@ -425,8 +419,8 @@ export function setupEnvironment(scene) {
         addBoxCollider(0.9, H, 0.9, x, H / 2, z);
     }
 
-    addColumn(-5.0, 15.5);
-    addColumn( 5.0, 15.5);
+    addColumn(-5.0, 16.0);
+    addColumn( 5.0, 16.0);
 
     return { collidableWalls };
 }

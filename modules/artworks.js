@@ -126,12 +126,9 @@ function addArt(scene, loader, {
 // =====================================================
 const GALLERY_DATA = [
     // Tường phía sau
-    { url: 'tranh/tranh1.jpg',  w: 6, h: 4,   x: -25,   y: 5,   z: -28.9, ry: 0,            title: 'Tác Phẩm 1',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold'   },
-    { url: 'tranh/tranh2.jpg',  w: 5, h: 7,   x: -10,   y: 5.5, z: -28.9, ry: 0,            title: 'Tác Phẩm 2',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'dark'   },
-    { url: 'tranh/tranh3.jpg',  w: 8, h: 5,   x:   5,   y: 6,   z: -28.9, ry: 0,            title: 'Tác Phẩm 3',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold'   },
-    { url: 'tranh/tranh4.jpg',  w: 5, h: 5,   x:  25,   y: 5,   z: -28.9, ry: 0,            title: 'Tác Phẩm 4',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'wood'   },
+    { url: 'tranh/tranh6.jpg',  w: 5, h: 7.5,   x:   0,   y: 5.5, z: -28.9, ry: 0,            title: 'mona lisa',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold'   },
     // Tường bên trái
-    { url: 'tranh/tranh5.jpg',  w: 6, h: 4,   x: -38.9, y: 5,   z: -15,   ry:  Math.PI / 2, title: 'Tác Phẩm 5',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'silver' },
+    { url: 'tranh/tranh7.jpg',  w: 20.7, h: 11.64,   x: 13.4, y: 6.9,   z: -7.5,   ry:  -Math.PI / 2, title: 'bữa ăn',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold' },
     { url: 'tranh/tranh6.jpg',  w: 4, h: 6,   x: -38.9, y: 4,   z:   0,   ry:  Math.PI / 2, title: 'Tác Phẩm 6',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold'   },
     { url: 'tranh/tranh7.jpg',  w: 7, h: 4,   x: -38.9, y: 5,   z:  15,   ry:  Math.PI / 2, title: 'Tác Phẩm 7',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'wood'   },
     // Tường bên phải
@@ -141,8 +138,7 @@ const GALLERY_DATA = [
     // Vách ngăn trong
     { url: 'tranh/tranh11.jpg', w: 4, h: 4,   x: -13.4, y: 5,   z: -20,   ry:  Math.PI / 2, title: 'Tác Phẩm 11', desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold'   },
     { url: 'tranh/tranh12.jpg', w: 5, h: 3,   x: -13.4, y: 5,   z: -10,   ry:  Math.PI / 2, title: 'Tác Phẩm 12', desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'wood'   },
-    { url: 'tranh/tranh13.jpg', w: 4, h: 4,   x:  13.4, y: 5,   z: -20,   ry: -Math.PI / 2, title: 'Tác Phẩm 13', desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold'   },
-    { url: 'tranh/tranh14.jpg', w: 4, h: 5,   x:  13.4, y: 5,   z: -10,   ry: -Math.PI / 2, title: 'Tác Phẩm 14', desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'silver' },
+   
 ];
 
 const INFO_BOARDS = [
