@@ -8,6 +8,7 @@ export function setupEnvironment(scene) {
     const WALL_THICK = 1;
 
     const collidableWalls = [];
+    const ceilingLights   = [];
     const loader     = new THREE.TextureLoader();
     const gltfLoader = new GLTFLoader();
 
@@ -280,18 +281,53 @@ export function setupEnvironment(scene) {
         light.castShadow = false; // Tắt shadow để tối ưu
         scene.add(light);
     }
+    function addChandelier(x, z) {
+        // 1. Hạ điểm phát sáng xuống cách trần 4.5 đơn vị
+        const light = new THREE.PointLight(0xffeacc, 120, 35);
+        light.position.set(x, H - 4.5, z); 
+        light.castShadow = false; 
+        scene.add(light);
+        
+        ceilingLights.push(light);
+        
+        gltfLoader.load('model/chandelier (2).glb', (gltf) => {
+            const model = gltf.scene;
+            
+            // 2. Hạ mô hình đèn xuống cách trần 4.0 đơn vị (để nó thò ra khỏi trần)
+            model.position.set(x, H - 5, z); 
+            
+            // 3. Phóng to model lên (thử số 10, nếu to quá thì giảm xuống 2, 3...)
+            model.scale.setScalar(25); 
+            
+            model.traverse(n => { 
+                if (n.isMesh) { 
+                    n.castShadow = true; 
+                    n.receiveShadow = true; 
+                } 
+            }); 
+            
+            scene.add(model);
+        }, 
+        // Thêm theo dõi tiến độ để chắc chắn file đang được tải
+        (xhr) => {
+            console.log(`Tiến độ tải đèn chùm: ${(xhr.loaded / xhr.total * 100)}%`);
+        }, 
+        err => console.error('Lỗi tải đèn chùm. Hãy check lại đường dẫn hoặc đổi tên file:', err));
+    }
 
+    // Căn phòng bên trái
     addCeilingLight(-27, -15);
-    addCeilingLight(-27,   5);
-    addCeilingLight(  0, -20);
-    addCeilingLight(  0,   5);
-    addCeilingLight( 27, -18);
-    addCeilingLight( 27,  10);
+    addCeilingLight(-27,   0);
+    addCeilingLight(-27,  15);
+
+    // Khu vực sảnh giữa
+    addChandelier(  0,  -7);
     addCeilingLight(  0,  22);
-    addCeilingLight(-27, -26);
-    addCeilingLight( 27, -26);
-    addCeilingLight( 35,  22);
-    addCeilingLight(-35,  22);
+
+    // Căn phòng bên phải (Giữ nguyên)
+    addCeilingLight( 27, -15.5);
+    addCeilingLight( 27,  5);
+    addCeilingLight( 27,  22);
 
     // ====================================================
     // NỘI THẤT PHÒNG TRỐNG
