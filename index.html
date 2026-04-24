@@ -1,23 +1,100 @@
-<div id="instructions">
-    <div class="content">
-        <h1>BẢO TÀNG NGHỆ THUẬT VIRTUAL</h1>
-        <p>Di chuyển: <b>W, A, S, D</b> | Nhìn: <b>Chuột</b></p>
-        <button id="start-btn">KHÁM PHÁ NGAY</button>
-    </div>
-</div>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bảo Tàng Nghệ Thuật 3D</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; background: #000; }
 
-<style>
-#instructions {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: flex; justify-content: center; align-items: center;
-    color: white; z-index: 10; font-family: sans-serif;
-    transition: 0.5s; /* Hiệu ứng mờ dần */
-}
-.content { text-align: center; border: 2px solid #d4af37; padding: 40px; }
-#start-btn { 
-    background: #d4af37; border: none; padding: 10px 20px; 
-    cursor: pointer; font-weight: bold; margin-top: 20px;
-}
-</style>
+        canvas#bg {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* --- Màn hình poster --- */
+        #instructions {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('poster.png') no-repeat center center;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            cursor: pointer;
+            transition: opacity 0.5s;
+        }
+
+        #instructions.hidden {
+            opacity: 0;
+            display: none;
+        }
+
+        /* --- Chữ thập ngắm giữa màn hình --- */
+        #crosshair {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px; height: 16px;
+            pointer-events: none;
+            display: none;
+        }
+        #crosshair::before, #crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(255,255,255,0.8);
+        }
+        #crosshair::before { width: 2px; height: 100%; left: 7px; top: 0; }
+        #crosshair::after  { width: 100%; height: 2px; top: 7px; left: 0; }
+
+        /* --- Bảng thông tin tranh --- */
+        #art-description {
+            position: absolute;
+            bottom: 40px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            border: 1px solid #d4af37;
+            padding: 16px 24px;
+            max-width: 480px;
+            font-family: sans-serif;
+            display: none;
+            text-align: center;
+        }
+        #art-title { font-size: 1.1rem; color: #d4af37; margin-bottom: 6px; }
+        #art-text  { font-size: 0.9rem; line-height: 1.5; }
+        #media-btn {
+            margin-top: 10px;
+            background: #d4af37; border: none;
+            padding: 8px 20px; cursor: pointer;
+            font-weight: bold; display: none;
+        }
+        #art-video {
+            margin-top: 10px;
+            max-width: 100%;
+            display: none;
+        }
+        #art-audio { display: none; }
+    </style>
+</head>
+<body>
+    <canvas id="bg"></canvas>
+
+    <div id="instructions"></div>
+
+    <div id="crosshair"></div>
+
+    <div id="art-description">
+        <div id="art-title"></div>
+        <div id="art-text"></div>
+        <button id="media-btn">▶ Phát media</button>
+        <video id="art-video" controls></video>
+        <audio id="art-audio"></audio>
+    </div>
+
+    <script type="module" src="/main.js"></script>
+</body>
+</html>
