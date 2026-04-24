@@ -1,20 +1,28 @@
-import { setupScene } from './modules/scene.js';
+import * as THREE from 'three';
+import { setupScene }       from './modules/scene.js';
 import { setupEnvironment } from './modules/environment.js';
-import { loadArtworks } from './modules/artworks.js';
-import { setupControls } from './modules/controls.js';
-import { setupUI } from './modules/ui.js';
+import { loadArtworks }     from './modules/artworks.js';
+import { setupControls }    from './modules/controls.js';
+import { setupUI }          from './modules/ui.js';
+import { setupCoordinates } from './modules/coordinates.js';
 
 const { scene, camera, renderer } = setupScene();
+const { collidableWalls } = setupEnvironment(scene);
 
-// Gọi hàm của tụi nó (Dù tụi nó chưa viết gì thì web vẫn chạy khung rỗng)
-setupEnvironment(scene, camera);
 loadArtworks(scene);
 setupUI();
 
-const controls = setupControls(camera, renderer);
+const { update: updateControls } = setupControls(camera, renderer, collidableWalls);
+
+const { update: updateCoords } = setupCoordinates(camera);
+
+const clock = new THREE.Clock();
 
 function animate() {
     requestAnimationFrame(animate);
+    const delta = clock.getDelta();
+    updateControls(delta);
+    updateCoords();
     renderer.render(scene, camera);
 }
 animate();
