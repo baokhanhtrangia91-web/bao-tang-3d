@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export const interactableObjects = [];
 
 // =====================================================
-// VẬT LIỆU KHUNG — dùng chung, tránh tạo lại mỗi lần
+// VẬT LIỆU KHUNG — dùng chung
 // =====================================================
 const FRAME_MATERIALS = {
     gold:   new THREE.MeshStandardMaterial({ color: 0xc8a84b, roughness: 0.25, metalness: 0.85 }),
@@ -24,20 +24,19 @@ const BACKING_MAT = new THREE.MeshStandardMaterial({ color: 0x111111, roughness:
 // =====================================================
 // HÀM TẠO KHUNG TRANH
 // =====================================================
-function createFrame(w, h, depth, frameStyle = 'gold') {
+function createFrame(w, h, depth, frameStyle) {
+    frameStyle = frameStyle || 'gold';
     const group  = new THREE.Group();
-    const FW     = 0.18; // độ rộng thanh khung
+    const FW     = 0.18;
     const outerW = w + FW * 2;
+    const mat       = FRAME_MATERIALS[frameStyle] || FRAME_MATERIALS.bronze;
+    const cornerMat = CORNER_MATERIALS[frameStyle] || CORNER_MATERIALS.other;
 
-    const mat       = FRAME_MATERIALS[frameStyle] ?? FRAME_MATERIALS.bronze;
-    const cornerMat = CORNER_MATERIALS[frameStyle] ?? CORNER_MATERIALS.other;
-
-    // 4 thanh khung (top, bottom, left, right)
     const bars = [
-        { size: [outerW, FW, depth], pos: [0,           h / 2 + FW / 2, 0] },
-        { size: [outerW, FW, depth], pos: [0,          -h / 2 - FW / 2, 0] },
-        { size: [FW,     h,  depth], pos: [-w / 2 - FW / 2, 0,          0] },
-        { size: [FW,     h,  depth], pos: [ w / 2 + FW / 2, 0,          0] },
+        { size: [outerW, FW, depth], pos: [0,            h / 2 + FW / 2, 0] },
+        { size: [outerW, FW, depth], pos: [0,            -h / 2 - FW / 2, 0] },
+        { size: [FW,     h,  depth], pos: [-w / 2 - FW / 2, 0,           0] },
+        { size: [FW,     h,  depth], pos: [ w / 2 + FW / 2, 0,           0] },
     ];
     for (const { size, pos } of bars) {
         const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), mat);
@@ -45,7 +44,6 @@ function createFrame(w, h, depth, frameStyle = 'gold') {
         group.add(mesh);
     }
 
-    // 4 góc trang trí
     const cs = FW + 0.02;
     for (const [cx, cy] of [
         [-w / 2 - FW / 2,  h / 2 + FW / 2],
@@ -63,34 +61,25 @@ function createFrame(w, h, depth, frameStyle = 'gold') {
 }
 
 // =====================================================
-// ĐÈN RỌI TRANH
-// =====================================================
-function addArtworkSpotlight(scene, x, y, z, ry) {
-    const dist = 5.5;
-    const light = new THREE.SpotLight(0xfff5e0, 55);
-    light.position.set(x + Math.sin(ry) * dist, y + 3.5, z + Math.cos(ry) * dist);
-    light.angle    = Math.PI / 8;
-    light.penumbra = 0.45;
-    light.decay    = 2;
-    light.distance = 18;
-    light.castShadow = false;
-    light.target.position.set(x, y, z);
-    scene.add(light, light.target);
-}
-
-// =====================================================
 // HÀM addArt CHÍNH
 // =====================================================
-function addArt(scene, loader, {
-    url, w, h,
-    x, y = 5, z, ry = 0,
-    title = '', desc = '',
-    mediaUrl = '', mediaType = 'none',
-    frameDepth = 0.12,
-    frameStyle = 'gold',
-    spotlight = true,
-    isInfoBoard = false,
-}) {
+function addArt(scene, loader, opts) {
+    const {
+        url, w, h,
+        x, z, ry,
+        title, desc,
+        mediaUrl, mediaType,
+        frameDepth, frameStyle,
+        isInfoBoard,
+    } = Object.assign({
+        y: 5, ry: 0, title: '', desc: '',
+        mediaUrl: '', mediaType: 'none',
+        frameDepth: 0.12, frameStyle: 'gold',
+        isInfoBoard: false,
+    }, opts);
+
+    const y = opts.y !== undefined ? opts.y : 5;
+
     const tex = loader.load(url);
     tex.colorSpace = THREE.SRGBColorSpace;
 
@@ -102,8 +91,7 @@ function addArt(scene, loader, {
     art.userData   = { isArt: true, title, desc, mediaUrl, mediaType };
     interactableObjects.push(art);
 
-    const frame = createFrame(w, h, frameDepth, isInfoBoard ? 'dark' : frameStyle);
-
+    const frame   = createFrame(w, h, frameDepth, isInfoBoard ? 'dark' : frameStyle);
     const backing = new THREE.Mesh(
         new THREE.BoxGeometry(w + 0.42, h + 0.42, 0.04),
         BACKING_MAT
@@ -115,30 +103,55 @@ function addArt(scene, loader, {
     group.position.set(x, y, z);
     group.rotation.y = ry;
     scene.add(group);
-
-    if (spotlight && !isInfoBoard) {
-        addArtworkSpotlight(scene, x, y, z, ry);
-    }
 }
 
 // =====================================================
 // DANH SÁCH TRANH
 // =====================================================
 const GALLERY_DATA = [
-    // Tường phía sau
-    { url: 'tranh/tranh6.jpg',  w: 5, h: 7.5,   x:   0,   y: 5.5, z: -28.9, ry: 0,            title: 'mona lisa',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold'   },
-    // Tường bên trái
-    { url: 'tranh/tranh7.jpg',  w: 20.7, h: 11.64,   x: 13.4, y: 6.9,   z: -7.5,   ry:  -Math.PI / 2, title: 'bữa ăn',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold' },
-    { url: 'tranh/tranh6.jpg',  w: 4, h: 6,   x: -38.9, y: 4,   z:   0,   ry:  Math.PI / 2, title: 'Tác Phẩm 6',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold'   },
-    { url: 'tranh/tranh7.jpg',  w: 7, h: 4,   x: -38.9, y: 5,   z:  15,   ry:  Math.PI / 2, title: 'Tác Phẩm 7',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'wood'   },
-    // Tường bên phải
-    { url: 'tranh/tranh8.jpg',  w: 5, h: 5,   x:  38.9, y: 5,   z: -15,   ry: -Math.PI / 2, title: 'Tác Phẩm 8',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold'   },
-    { url: 'tranh/tranh9.jpg',  w: 8, h: 4,   x:  38.9, y: 5,   z:   0,   ry: -Math.PI / 2, title: 'Tác Phẩm 9',  desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'dark'   },
-    { url: 'tranh/tranh10.jpg', w: 5, h: 7,   x:  38.9, y: 5,   z:  15,   ry: -Math.PI / 2, title: 'Tác Phẩm 10', desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'silver' },
-    // Vách ngăn trong
-    { url: 'tranh/tranh11.jpg', w: 4, h: 4,   x: -13.4, y: 5,   z: -20,   ry:  Math.PI / 2, title: 'Tác Phẩm 11', desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold'   },
-    { url: 'tranh/tranh12.jpg', w: 5, h: 3,   x: -13.4, y: 5,   z: -10,   ry:  Math.PI / 2, title: 'Tác Phẩm 12', desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'wood'   },
-   
+    // --- Tường phía sau (sảnh chính) ---
+    { url: 'tranh/tranh6.jpg',  w: 5,    h: 7.5,   x:   0,    y: 5.5, z: -28.9, ry: 0,             title: 'Mona Lisa',        desc: 'Kiệt tác của Leonardo da Vinci, được vẽ vào đầu thế kỷ 16.',  frameStyle: 'gold'   },
+
+    // --- Tường bên trái vách ngăn (x=-13.4, hướng phải) ---
+    { url: 'tranh/tranh7.jpg',  w: 20.7, h: 11.64, x: 13.4,  y: 6.9, z: -7.5,  ry: -Math.PI / 2,  title: 'Bữa Tối Cuối Cùng', desc: 'Bức bích họa nổi tiếng của Leonardo da Vinci.',              frameStyle: 'gold'   },
+    { url: 'tranh/tranh11.jpg', w: 4,    h: 4,     x: -13.4, y: 5,   z: -20,   ry:  Math.PI / 2,  title: 'Tác Phẩm 11',      desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.',         frameStyle: 'gold'   },
+    { url: 'tranh/tranh12.jpg', w: 5,    h: 3,     x: -13.4, y: 5,   z: -10,   ry:  Math.PI / 2,  title: 'Tác Phẩm 12',      desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.',         frameStyle: 'wood'   },
+
+    // --- Tường bên phải (x=38.9) ---
+    { url: 'tranh/tranh8.jpg',  w: 5,    h: 5,     x:  38.9, y: 5,   z: -15,   ry: -Math.PI / 2,  title: 'Tác Phẩm 8',       desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.',         frameStyle: 'gold'   },
+    { url: 'tranh/tranh9.jpg',  w: 8,    h: 4,     x:  38.9, y: 5,   z:   0,   ry: -Math.PI / 2,  title: 'Tác Phẩm 9',       desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.',         frameStyle: 'dark'   },
+    { url: 'tranh/tranh10.jpg', w: 5,    h: 7,     x:  38.9, y: 5,   z:  15,   ry: -Math.PI / 2,  title: 'Tác Phẩm 10',      desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.',         frameStyle: 'silver' },
+
+    // =========================================================
+    // PHÒNG BÊN TRÁI — TRANH XUNG QUANH TƯỜNG
+    // Phòng: X[-39.5, -14], Z[-29.5, 29.5]
+    // Tường trái (x = -39.0, hướng vào phòng → ry = Math.PI/2)
+    // Tường phải (x = -14.6, hướng vào phòng → ry = -Math.PI/2)  (vách ngăn trái)
+    // Tường sau (z = -28.9, ry = 0)
+    // Tường trước (z = 28.9, ry = Math.PI)
+    // =========================================================
+
+    // Tường trái phòng (x = -39.0) — 5 tranh
+    { url: 'tranh/tranh1.jpg',  w: 4,    h: 5,     x: -39.0, y: 5,   z: -22,   ry:  Math.PI / 2,  title: 'Tranh 1',           desc: 'Nghệ thuật trừu tượng đương đại.',                             frameStyle: 'gold'   },
+    { url: 'tranh/tranh2.jpg',  w: 5,    h: 3.5,   x: -39.0, y: 5,   z: -10,   ry:  Math.PI / 2,  title: 'Tranh 2',           desc: 'Phong cảnh thiên nhiên kỳ vĩ.',                                frameStyle: 'silver' },
+    { url: 'tranh/tranh3.jpg',  w: 4,    h: 4,     x: -39.0, y: 5,   z:   2,   ry:  Math.PI / 2,  title: 'Tranh 3',           desc: 'Chân dung người phụ nữ cổ điển.',                              frameStyle: 'wood'   },
+    { url: 'tranh/tranh4.jpg',  w: 4,    h: 5.5,   x: -39.0, y: 5,   z:  14,   ry:  Math.PI / 2,  title: 'Tranh 4',           desc: 'Hội họa ấn tượng phái.',                                       frameStyle: 'gold'   },
+    { url: 'tranh/tranh5.jpg',  w: 5,    h: 3,     x: -39.0, y: 5,   z:  24,   ry:  Math.PI / 2,  title: 'Tranh 5',           desc: 'Sơn dầu phong cảnh Châu Âu.',                                  frameStyle: 'bronze' },
+
+    // Tường phải phòng (vách ngăn x = -14.6) — 5 tranh
+    { url: 'tranh/tranh13.jpg', w: 4,    h: 4.5,   x: -14.6, y: 5,   z: -22,   ry: -Math.PI / 2,  title: 'Tranh 13',          desc: 'Hoa sen trong nghệ thuật Á Đông.',                             frameStyle: 'gold'   },
+    { url: 'tranh/tranh14.jpg', w: 5,    h: 3.5,   x: -14.6, y: 5,   z: -10,   ry: -Math.PI / 2,  title: 'Tranh 14',          desc: 'Bình nguyên trải dài vô tận.',                                 frameStyle: 'silver' },
+    { url: 'tranh/tranh15.jpg', w: 4,    h: 4,     x: -14.6, y: 5,   z:   2,   ry: -Math.PI / 2,  title: 'Tranh 15',          desc: 'Rừng mưa nhiệt đới.',                                          frameStyle: 'wood'   },
+    { url: 'tranh/tranh16.jpg', w: 4,    h: 5,     x: -14.6, y: 5,   z:  14,   ry: -Math.PI / 2,  title: 'Tranh 16',          desc: 'Làng chài ven biển.',                                          frameStyle: 'dark'   },
+    // Tường sau phòng (z = -28.9) — 3 tranh
+    { url: 'tranh/tranh18.jpg', w: 5,    h: 4,     x: -32,   y: 5,   z: -28.9, ry:  0,             title: 'Tranh 18',          desc: 'Cảnh hoàng hôn trên sông.',                                    frameStyle: 'gold'   },
+    { url: 'tranh/tranh19.jpg', w: 4,    h: 5.5,   x: -26,   y: 5,   z: -28.9, ry:  0,             title: 'Tranh 19',          desc: 'Phố cổ Hội An về đêm.',                                        frameStyle: 'silver' },
+    { url: 'tranh/tranh20.jpg', w: 5,    h: 4,     x: -20,   y: 5,   z: -28.9, ry:  0,             title: 'Tranh 20',          desc: 'Biển cả và trăng tròn.',                                       frameStyle: 'wood'   },
+
+    // Tường trước phòng (z = 28.9) — 3 tranh
+    { url: 'tranh/tranh21.jpg', w: 5,    h: 4,     x: -32,   y: 5,   z:  28.9, ry:  Math.PI,        title: 'Tranh 21',          desc: 'Mùa thu lá vàng.',                                             frameStyle: 'gold'   },
+    { url: 'tranh/tranh22.jpg', w: 3.5,  h: 4.5,   x: -26,   y: 5,   z:  28.9, ry:  Math.PI,        title: 'Tranh 22',          desc: 'Chân dung nghệ sĩ.',                                           frameStyle: 'bronze' },
+    { url: 'tranh/tranh23.jpg', w: 4,    h: 4,     x: -20,   y: 5,   z:  28.9, ry:  Math.PI,        title: 'Tranh 23',          desc: 'Nghệ thuật pop art hiện đại.',                                 frameStyle: 'silver' },
 ];
 
 const INFO_BOARDS = [
@@ -162,7 +175,7 @@ export function loadArtworks(scene) {
             ...board,
             title: 'Thông Tin', desc: 'Khu vực trưng bày chính.',
             frameDepth: 0.6, frameStyle: 'dark',
-            spotlight: false, isInfoBoard: true,
+            isInfoBoard: true,
         });
     }
 }
