@@ -11,6 +11,8 @@ export function setupEnvironment(scene) {
     const loader = new THREE.TextureLoader();
     const gltfLoader = new GLTFLoader();
 
+    const colliderMat = new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide });
+
     // === TEXTURES ===
     const floorTex = loader.load('model/go2.jpg');
     floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
@@ -21,40 +23,35 @@ export function setupEnvironment(scene) {
     wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
     wallTex.repeat.set(8, 2);
     wallTex.colorSpace = THREE.SRGBColorSpace;
-    const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, color: 0xe8e4de, roughness: 0.85, metalness: 0.0 });
+    const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, color: 0xFFDFC4, roughness: 0.85, metalness: 0.0 });
 
     const ceilingTex = loader.load('model/trần gỗ.jpg');
     ceilingTex.wrapS = ceilingTex.wrapT = THREE.RepeatWrapping;
     ceilingTex.repeat.set(32, 24);
     ceilingTex.colorSpace = THREE.SRGBColorSpace;
-    const ceilingMat = new THREE.MeshStandardMaterial({ map: ceilingTex, color: 0xfff8f0, roughness: 0.5 });
+    const ceilingMat = new THREE.MeshStandardMaterial({ map: ceilingTex, color: 0xfff8f0, roughness: 0.8 });
 
     const woodTex = ceilingTex.clone();
     woodTex.needsUpdate = true;
     woodTex.repeat.set(2, 2);
     const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, color: 0xe0d5c0, roughness: 0.5 });
 
-    // === ÁNH SÁNG TỔNG THỂ ===
-    // Ambient nhẹ — để spotlight nổi bật hơn
-    const ambient = new THREE.AmbientLight(0xfff8f0, 0.50);
+    // === ÁNH SÁNG MÔI TRƯỜNG (tối ưu) ===
+    const ambient = new THREE.AmbientLight(0xfff8f0, 1.0);
     scene.add(ambient);
 
-    // HemisphereLight: bầu trời ấm, mặt đất tối nhẹ
-    const hemiLight = new THREE.HemisphereLight(0xfff5e8, 0x3a2a18, 0.45);
+    const hemiLight = new THREE.HemisphereLight(0xfff5e8, 0x3a2a18, 0.5);
     hemiLight.position.set(0, H, 0);
     scene.add(hemiLight);
 
     // === SÀN ===
     const floor = new THREE.Mesh(
         new THREE.PlaneGeometry(W, D),
-        new THREE.MeshStandardMaterial({ map: floorTex, color: 0xcccccc, roughness: 0.35, metalness: 0.05 })
+        new THREE.MeshStandardMaterial({ map: floorTex, color: 0xcccccc, roughness: 0.6, metalness: 0.05 })
     );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
-
-    // Baseboard (chân tường) — dải sẫm màu sát sàn
-    const baseboardMat = new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.7, metalness: 0.1 });
 
     // === TRẦN ===
     const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(W, D), ceilingMat);
@@ -62,26 +59,25 @@ export function setupEnvironment(scene) {
     ceiling.position.set(0, H, 0);
     scene.add(ceiling);
 
-    // === HELPER: TẠO TƯỜNG ===
+    // === HELPERS ===
+    function addBoxCollider(w, h, d, x, y, z, ry = 0) {
+        const collider = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), colliderMat);
+        collider.position.set(x, y, z);
+        collider.rotation.y = ry;
+        scene.add(collider);
+        collidableWalls.push(collider);
+    }
+
     function addWall(w, h, d, x, z) {
         const wall = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
         wall.position.set(x, h / 2, z);
-        wall.castShadow = wall.receiveShadow = true;
+        wall.receiveShadow = true;
         scene.add(wall);
-        collidableWalls.push(wall);
-
-        // Baseboard
-        const bbW = w > d ? w : 0.12;
-        const bbD = d > w ? d : 0.12;
-        const bb = new THREE.Mesh(new THREE.BoxGeometry(bbW, 0.25, bbD + 0.05), baseboardMat);
-        bb.position.set(x, 0.125, z);
-        scene.add(bb);
+        addBoxCollider(w, h, d, x, h / 2, z);
     }
 
-    // === HELPER: VÒNG CUỐN ===
     function addArch(gapW, d, x, yBase, z, ry = 0) {
         const h = H - yBase;
-
         const shape = new THREE.Shape();
         shape.moveTo(-gapW / 2, 0);
         shape.absarc(0, 0, gapW / 2, Math.PI, 0, true);
@@ -91,17 +87,14 @@ export function setupEnvironment(scene) {
 
         const archGeo = new THREE.ExtrudeGeometry(shape, { depth: d, bevelEnabled: false, curveSegments: 12 });
         archGeo.translate(0, -h / 2, -d / 2);
-
         const archMesh = new THREE.Mesh(archGeo, wallMat);
         archMesh.position.set(x, yBase + h / 2, z);
         archMesh.rotation.y = ry;
-        archMesh.castShadow = archMesh.receiveShadow = true;
+        archMesh.receiveShadow = true;
         scene.add(archMesh);
-        collidableWalls.push(archMesh);
 
         const trimW = 0.4, innerOffset = 0.05, trimDepth = d + 0.15;
         const r1 = gapW / 2 - innerOffset, r2 = gapW / 2 + trimW;
-
         const trimShape = new THREE.Shape();
         trimShape.moveTo(-r1, -yBase); trimShape.lineTo(-r1, 0);
         trimShape.absarc(0, 0, r1, Math.PI, 0, true);
@@ -111,13 +104,10 @@ export function setupEnvironment(scene) {
 
         const trimGeo = new THREE.ExtrudeGeometry(trimShape, { depth: trimDepth, bevelEnabled: false, curveSegments: 12 });
         trimGeo.translate(0, 0, -trimDepth / 2);
-
         const trimMesh = new THREE.Mesh(trimGeo, woodMat);
         trimMesh.position.set(x, yBase, z);
         trimMesh.rotation.y = ry;
-        trimMesh.castShadow = trimMesh.receiveShadow = true;
         scene.add(trimMesh);
-        collidableWalls.push(trimMesh);
     }
 
     // === TƯỜNG BAO & VÁCH NGĂN ===
@@ -139,73 +129,92 @@ export function setupEnvironment(scene) {
     addArch(8, WALL_THICK, 0, 6, 15, 0);
     addWall(15, H, WALL_THICK, 31.5, -5);
 
-    // === BỆ TRƯNG BÀY ===
-    const statueZ = -7;
-    const pedestalGroup = new THREE.Group();
-
-    const pedestalBase = new THREE.Mesh(
-        new THREE.BoxGeometry(7, 1.4, 7),
-        new THREE.MeshStandardMaterial({ color: 0xf0ede8, roughness: 0.08, metalness: 0.15 })
-    );
-    pedestalBase.position.set(0, 0.7, 0);
-    pedestalBase.castShadow = pedestalBase.receiveShadow = true;
-    pedestalGroup.add(pedestalBase);
-
+    // ====================================================
+    // BỆ TRƯNG BÀY — helper tạo bệ
+    // ====================================================
     const goldMat = new THREE.MeshStandardMaterial({ color: 0xc5a059, roughness: 0.3, metalness: 0.9 });
-    const pedestalTop = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.2, 7.4), goldMat);
-    pedestalTop.position.set(0, 1.5, 0);
-    pedestalTop.castShadow = pedestalTop.receiveShadow = true;
-    pedestalGroup.add(pedestalTop);
 
-    const pedestalBottom = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.2, 7.4), goldMat);
-    pedestalBottom.position.set(0, 0.1, 0);
-    pedestalBottom.castShadow = pedestalBottom.receiveShadow = true;
-    pedestalGroup.add(pedestalBottom);
+    function createPedestal(cx, cz, width) {
+        width = width || 7;
+        const g = new THREE.Group();
+        const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf0ede8, roughness: 0.08, metalness: 0.15 });
 
-    pedestalGroup.position.set(0, 0, statueZ);
-    scene.add(pedestalGroup);
-    collidableWalls.push(pedestalBase);
+        const base = new THREE.Mesh(new THREE.BoxGeometry(width, 1.4, width), whiteMat);
+        base.position.set(0, 0.7, 0);
+        base.castShadow = true; base.receiveShadow = true;
+        g.add(base);
 
-    // === RÀO CHẮN VIP ===
-    const barrierSize = 11;
-    const barrierOffset = barrierSize / 2;
-    const ropeWallHeight = 2.5;
-    const invisibleMat = new THREE.MeshBasicMaterial({ visible: false });
-    const wallPadding = 0.8;
-    const wallOffset = barrierOffset - wallPadding;
-    const wallSize = barrierSize - (wallPadding * 8);
+        const top = new THREE.Mesh(new THREE.BoxGeometry(width + 0.4, 0.2, width + 0.4), goldMat);
+        top.position.set(0, 1.5, 0);
+        top.castShadow = true; top.receiveShadow = true;
+        g.add(top);
 
-    function addInvisibleWall(w, d, x, z) {
-        const wall = new THREE.Mesh(new THREE.BoxGeometry(w, ropeWallHeight, d), invisibleMat);
-        wall.position.set(x, ropeWallHeight / 2, z);
-        scene.add(wall);
-        collidableWalls.push(wall);
+        const bottom = new THREE.Mesh(new THREE.BoxGeometry(width + 0.4, 0.2, width + 0.4), goldMat);
+        bottom.position.set(0, 0.1, 0);
+        bottom.receiveShadow = true;
+        g.add(bottom);
+
+        g.position.set(cx, 0, cz);
+        scene.add(g);
+        addBoxCollider(width + 0.5, 5.0, width + 0.5, cx, 2.5, cz);
     }
 
-    addInvisibleWall(wallSize, 0.3, 0, statueZ + wallOffset);
-    addInvisibleWall(wallSize, 0.3, 0, statueZ - wallOffset);
-    addInvisibleWall(0.3, wallSize, -wallOffset, statueZ);
-    addInvisibleWall(0.3, wallSize, wallOffset, statueZ);
+    // Bệ chính giữa sảnh (tượng xe tăng Da Vinci)
+    const statueZ = -7;
+    createPedestal(0, statueZ, 7);
+
+    // ====================================================
+    // 3 BỆ PHÒNG BÊN TRÁI 
+    // ====================================================
+    const LEFT_X = -26.75;
+    const LEFT_BED_W = 4.5;
+    const leftZPositions = [-14, 0, 14];
+
+    for (let i = 0; i < leftZPositions.length; i++) {
+        createPedestal(LEFT_X, leftZPositions[i], LEFT_BED_W);
+    }
+
+    // Đèn rọi xuống từng bệ ở phòng trái
+    for (let i = 0; i < leftZPositions.length; i++) {
+        const pz = leftZPositions[i];
+        const sp = new THREE.SpotLight(0xfff0dd, 280);
+        sp.position.set(LEFT_X + 5, 13, pz + 3);
+        sp.angle = Math.PI / 6;
+        sp.penumbra = 0.4;
+        sp.decay = 2;
+        sp.distance = 28;
+        sp.castShadow = false;
+        sp.target.position.set(LEFT_X, 1.5, pz);
+        scene.add(sp, sp.target);
+    }
+
+    // === RÀO CHẮN VIP (bệ chính) ===
+    const barrierSize = 11;
+    const barrierOffset = barrierSize / 2;
+    const ropeWallH = 2.5;
+
+    addBoxCollider(barrierSize, ropeWallH, 0.3, 0, ropeWallH / 2, statueZ + barrierOffset);
+    addBoxCollider(barrierSize, ropeWallH, 0.3, 0, ropeWallH / 2, statueZ - barrierOffset);
+    addBoxCollider(0.3, ropeWallH, barrierSize, -barrierOffset, ropeWallH / 2, statueZ);
+    addBoxCollider(0.3, ropeWallH, barrierSize, barrierOffset, ropeWallH / 2, statueZ);
 
     gltfLoader.load('model/vip_rope_barrier.glb', (gltf) => {
         const rawModel = gltf.scene;
         const box = new THREE.Box3().setFromObject(rawModel);
-        const size = box.getSize(new THREE.Vector3());
-        const scaleFactor = 2.8 / size.y;
+        const scaleFactor = 2.8 / box.getSize(new THREE.Vector3()).y;
         rawModel.scale.setScalar(scaleFactor);
 
         const newBox = new THREE.Box3().setFromObject(rawModel);
         const newCenter = newBox.getCenter(new THREE.Vector3());
-        const newMinY = newBox.min.y;
         rawModel.position.x = -newCenter.x;
-        rawModel.position.y = -newMinY;
+        rawModel.position.y = -newBox.min.y;
         rawModel.position.z = -newCenter.z;
 
-        const barrierWrapper = new THREE.Group();
-        barrierWrapper.add(rawModel);
+        const wrap = new THREE.Group();
+        wrap.add(rawModel);
 
         function placeBarrier(x, z, rotY) {
-            const clone = barrierWrapper.clone();
+            const clone = wrap.clone();
             clone.position.set(x, 0, z);
             clone.rotation.y = rotY;
             clone.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
@@ -218,9 +227,10 @@ export function setupEnvironment(scene) {
         placeBarrier(barrierOffset, statueZ, -Math.PI / 2);
     }, undefined, err => console.error('Lỗi tải rào chắn VIP:', err));
 
-    // === ĐÈN RỌI TƯỢNG ===
-    const statueLight = new THREE.SpotLight(0xfff0dd, 600);
-    statueLight.position.set(3, 13.5, statueZ + 12);
+    // === ĐÈN RỌI TƯỢNG CHÍNH ===
+    const statueLight = new THREE.SpotLight(0xfff0dd, 400);
+    // SỬA Ở ĐÂY: Chuyển x = 0 và z = statueZ để đèn nằm ngay trên đỉnh đầu tượng
+    statueLight.position.set(0, 13.5, statueZ);
     statueLight.angle = Math.PI / 5;
     statueLight.penumbra = 0.4;
     statueLight.decay = 2;
@@ -231,265 +241,132 @@ export function setupEnvironment(scene) {
     statueLight.target.position.set(0, 1.5, statueZ);
     scene.add(statueLight, statueLight.target);
 
-    // Fill nhẹ cho tượng từ phía đối diện
-    const statueFill = new THREE.SpotLight(0xc8deff, 80);
-    statueFill.position.set(-5, 8, statueZ - 8);
+    const statueFill = new THREE.SpotLight(0xc8deff, 60);
+    // SỬA Ở ĐÂY: Tương tự, đặt x = 0 và z = statueZ, đưa đèn lên cao một chút (y = 12)
+    statueFill.position.set(0, 12, statueZ);
     statueFill.angle = Math.PI / 4;
     statueFill.penumbra = 0.8;
     statueFill.decay = 2;
     statueFill.distance = 30;
+    statueFill.castShadow = false;
     statueFill.target.position.set(0, 1.5, statueZ);
     scene.add(statueFill, statueFill.target);
 
-    // MODEL TƯỢNG
+    // === MODEL TƯỢNG CHÍNH ===
     gltfLoader.load('model/da_vinci_tank.glb', (gltf) => {
         const model = gltf.scene;
         model.position.set(0, 1.3, statueZ);
         model.scale.setScalar(80);
-        model.traverse(n => { if (n.isMesh) n.castShadow = true; });
+        model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
         scene.add(model);
     }, undefined, err => console.error('Lỗi tải model:', err));
 
-    // === ĐÈN TRẦN (PANEL ĐÈN ĐỒI XỨ) ===
-    function addCeilingLight(x, z, intensity = 120, color = 0xfff8f0) {
-        // Panel đèn LED dài
-        const panelMat = new THREE.MeshBasicMaterial({ color: 0xfff8e8 });
-        const panel = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.06, 1.0), panelMat);
-        panel.position.set(x, H - 0.04, z);
-        scene.add(panel);
-
-        // Viền panel đèn
-        const rimMat = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, metalness: 0.8, roughness: 0.2 });
-        const rim = new THREE.Mesh(new THREE.BoxGeometry(3.7, 0.08, 1.2), rimMat);
-        rim.position.set(x, H - 0.06, z);
-        scene.add(rim);
-
-        // PointLight chính
-        const light = new THREE.PointLight(color, intensity, 30);
-        light.position.set(x, H - 0.5, z);
-        light.castShadow = false; // Tắt shadow để tối ưu hiệu năng
+    // ====================================================
+    // ĐÈN CHÙM
+    // ====================================================
+    function addChandelier(x, z) {
+        const light = new THREE.PointLight(0xffeacc, 110, 32);
+        light.position.set(x, H - 4.5, z);
+        light.castShadow = false;
         scene.add(light);
 
-        // SpotLight hướng xuống để tạo pool ánh sáng rõ nét trên sàn
-        const downSpot = new THREE.SpotLight(color, 80, 18, Math.PI / 5, 0.6, 2);
-        downSpot.position.set(x, H - 0.6, z);
-        downSpot.target.position.set(x, 0, z);
-        scene.add(downSpot, downSpot.target);
+        gltfLoader.load('model/chandelier (2).glb', (gltf) => {
+            const model = gltf.scene;
+            model.position.set(x, H - 5, z);
+            model.scale.setScalar(25);
+            model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+            scene.add(model);
+        }, undefined, err => console.error('Lỗi tải đèn chùm:', err));
     }
 
-    // Phòng chính (khu tượng + cánh hai bên)
-    addCeilingLight(-27, -15);
-    addCeilingLight(-27, 5);
-    addCeilingLight(0, -20);
-    addCeilingLight(0, 5);
-    addCeilingLight(27, -18);
-    addCeilingLight(27, 10);
-    addCeilingLight(0, 22);
-
-    // Thêm đèn phủ các góc còn thiếu
-    addCeilingLight(-27, -26, 80, 0xfff0e8);
-    addCeilingLight(27, -26, 80, 0xfff0e8);
-    addCeilingLight(35, 22, 80, 0xfff0e8);
-    addCeilingLight(-35, 22, 80, 0xfff0e8);
+    // Phòng trái
+    addChandelier(-27, -15);
+    addChandelier(-27, 0);
+    addChandelier(-27, 15);
+    // Sảnh giữa
+    addChandelier(0, -7);
+    addChandelier(0, 22);
+    // Phòng phải
+    addChandelier(27, -15.5);
+    addChandelier(27, 5);
+    addChandelier(27, 22);
 
     // ====================================================
-    // NỘI THẤT PHÒNG TRỐNG
+    // NỘI THẤT: GHẾ, ĐÈN SÀN, CỘT
     // ====================================================
-
-    // --- VẬT LIỆU DÙNG CHUNG ---
-    const darkWoodMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.7, metalness: 0.05 });
     const lightWoodMat = new THREE.MeshStandardMaterial({ color: 0x8b6340, roughness: 0.75, metalness: 0.02 });
-    const marbleMat = new THREE.MeshStandardMaterial({ color: 0xf5f0ea, roughness: 0.15, metalness: 0.05 });
     const cushionMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.95, metalness: 0.0 });
     const metalMat = new THREE.MeshStandardMaterial({ color: 0x888890, roughness: 0.25, metalness: 0.9 });
-    const plantMat = new THREE.MeshStandardMaterial({ color: 0x2d6a2d, roughness: 0.9, metalness: 0.0 });
-    const potMat = new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.6, metalness: 0.1 });
 
-    // =====================================================
-    // HÀM TẠO GHẾ DÀI GALLERY (BENCH)
-    // =====================================================
-    function addBench(x, z, ry = 0) {
+    function addBench(x, z, ry) {
+        ry = ry || 0;
         const g = new THREE.Group();
-
-        // Mặt ngồi
         const seat = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.1, 0.75), lightWoodMat);
-        seat.position.set(0, 0.9, 0);
-        seat.castShadow = seat.receiveShadow = true;
-        g.add(seat);
-
-        // Nệm ngồi
+        seat.position.set(0, 0.9, 0); seat.receiveShadow = true; g.add(seat);
         const cushion = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.1, 0.6), cushionMat);
-        cushion.position.set(0, 1.0, 0);
-        cushion.castShadow = true; cushion.receiveShadow = true;
-        g.add(cushion);
-
-        // Chân ghế (4 chân kim loại)
-        const legPositions = [[-1.15, -0.3], [1.15, -0.3], [-1.15, 0.3], [1.15, 0.3]];
-        for (const [lx, lz] of legPositions) {
+        cushion.position.set(0, 1.0, 0); cushion.receiveShadow = true; g.add(cushion);
+        for (const [lx, lz] of [[-1.15, -0.3], [1.15, -0.3], [-1.15, 0.3], [1.15, 0.3]]) {
             const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.9, 8), metalMat);
-            leg.position.set(lx, 0.45, lz);
-            leg.castShadow = true;
-            g.add(leg);
+            leg.position.set(lx, 0.45, lz); g.add(leg);
         }
-
-        // Thanh nối chân
         const crossbar = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.05, 0.05), metalMat);
-        crossbar.position.set(0, 0.25, 0);
-        g.add(crossbar);
-
-        g.position.set(x, 0, z);
-        g.rotation.y = ry;
-        scene.add(g);
+        crossbar.position.set(0, 0.25, 0); g.add(crossbar);
+        g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
+        addBoxCollider(2.8, 1.1, 0.8, x, 0.55, z, ry);
     }
 
-    // Ghế ở phòng chính (xung quanh tượng)
     addBench(-8, 10, 0);
+    addBench(8, 10, Math.PI);
     addBench(-20, -8, Math.PI / 2);
-    addBench(15.5, -18, -Math.PI / 2);
-    addBench(10, 16.5, 0);
-    addBench(10, 28, 0);
-    addBench(-10, 16.5, 0);
-    addBench(-10, 28, 0);
-    // Ghế ở hai cánh phòng
-    addBench(-30, -8, Math.PI / 2);
-    addBench(30, -6.5, 0);
+    addBench(20, -8, -Math.PI / 2);
+    addBench(-30, -8, 0);
+    addBench(30, -8, 0);
     addBench(-30, 8, 0);
-    addBench(20, 13.5, 0);
+    addBench(30, 8, 0);
 
-    // =====================================================
-    // HÀM TẠO ĐÈN SÀN (FLOOR LAMP)
-    // =====================================================
     function addFloorLamp(x, z) {
         const g = new THREE.Group();
-
-        // Chân đèn
         const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 2.2, 10), metalMat);
-        pole.position.set(0, 1.1, 0);
-        pole.castShadow = true;
-        g.add(pole);
-
-        // Đế
+        pole.position.set(0, 1.1, 0); g.add(pole);
         const base = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.25, 0.06, 16), metalMat);
-        base.position.set(0, 0.03, 0);
-        base.castShadow = base.receiveShadow = true;
-        g.add(base);
-
-        // Chóa đèn
+        base.position.set(0, 0.03, 0); base.receiveShadow = true; g.add(base);
         const shade = new THREE.Mesh(
             new THREE.CylinderGeometry(0.28, 0.18, 0.35, 16, 1, true),
-            new THREE.MeshStandardMaterial({ color: 0xf5dfa0, roughness: 0.8, metalness: 0.0, side: THREE.DoubleSide })
+            new THREE.MeshStandardMaterial({ color: 0xf5dfa0, roughness: 0.8, side: THREE.DoubleSide })
         );
-        shade.position.set(0, 2.38, 0);
-        shade.castShadow = true;
-        g.add(shade);
-
-        // Ánh sáng từ đèn sàn
-        const lampLight = new THREE.PointLight(0xffe8a0, 30, 10, 2);
-        lampLight.position.set(0, 2.2, 0);
-        g.add(lampLight);
-
+        shade.position.set(0, 2.38, 0); g.add(shade);
+        const lampLight = new THREE.PointLight(0xffe8a0, 20, 8, 2);
+        lampLight.position.set(0, 2.2, 0); g.add(lampLight);
         const glowBulb = new THREE.Mesh(
             new THREE.SphereGeometry(0.07, 8, 8),
             new THREE.MeshBasicMaterial({ color: 0xffe8a0 })
         );
-        glowBulb.position.set(0, 2.2, 0);
-        g.add(glowBulb);
-
-        g.position.set(x, 0, z);
-        scene.add(g);
+        glowBulb.position.set(0, 2.2, 0); g.add(glowBulb);
+        g.position.set(x, 0, z); scene.add(g);
     }
 
-    // Đèn sàn ở góc phòng và cạnh ghế
     addFloorLamp(-36, -22);
     addFloorLamp(36, -22);
     addFloorLamp(-36, 18);
     addFloorLamp(36, 18);
-    addFloorLamp(5, 23);
-    addFloorLamp(-5, 23);
-    addFloorLamp(5.30, 2.30);
-    addFloorLamp(-5.30, 2.30);
-    addFloorLamp(5, -15.30);
-    addFloorLamp(-5, -15.30);
-    addFloorLamp(12.5, 10);
-    addFloorLamp(-12.5, 10);
-    addFloorLamp(10, -26);
-    addFloorLamp(-10, -26);
-    addFloorLamp(-18, -22);
-    addFloorLamp(-18, 18);
-    addFloorLamp(-18, 0);
-    addFloorLamp(36, 26);
-    addFloorLamp(36, 8);
-    addFloorLamp(25, -2.5);
-    addFloorLamp(18, -22);
-    addFloorLamp(18, 9);
-    addFloorLamp(1, -26);
-    addFloorLamp(20, 18);
+    addFloorLamp(-5, 24);
+    addFloorLamp(5, 24);
 
-
-
-    // =====================================================
-    // CỘT TRANG TRÍ (PILLAR / COLUMN)
-    // =====================================================
     function addColumn(x, z) {
         const g = new THREE.Group();
         const colMat = new THREE.MeshStandardMaterial({ color: 0xf0ede8, roughness: 0.3, metalness: 0.05 });
-
-        // Thân cột
         const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.38, H - 0.5, 16), colMat);
-        shaft.position.set(0, (H - 0.5) / 2, 0);
-        shaft.castShadow = shaft.receiveShadow = true;
-        g.add(shaft);
-
-        // Đầu cột
+        shaft.position.set(0, (H - 0.5) / 2, 0); shaft.receiveShadow = true; g.add(shaft);
         const capital = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.4, 1.0), colMat);
-        capital.position.set(0, H - 0.45, 0);
-        g.add(capital);
-
-        // Đế cột
+        capital.position.set(0, H - 0.45, 0); g.add(capital);
         const base = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.3, 0.9), colMat);
-        base.position.set(0, 0.15, 0);
-        g.add(base);
-
-        g.position.set(x, 0, z);
-        scene.add(g);
-        collidableWalls.push(shaft);
+        base.position.set(0, 0.15, 0); g.add(base);
+        g.position.set(x, 0, z); scene.add(g);
+        addBoxCollider(0.9, H, 0.9, x, H / 2, z);
     }
 
-    // Cột trang trí ở hai bên cổng trung tâm
-    addColumn(-5.0, 15.5);
-    addColumn(5.0, 15.5);
-
-    // =====================================================
-
-
-    // =====================================================
-    // DISPLAY PEDESTAL NHỎ (BỤC TRƯNG BÀY HIỆN VẬT)
-    // =====================================================
-    function addSmallPedestal(x, z, height = 1.2) {
-        const g = new THREE.Group();
-
-        const top = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.8), marbleMat);
-        top.position.set(0, height, 0);
-        top.castShadow = top.receiveShadow = true;
-        g.add(top);
-
-        const body = new THREE.Mesh(new THREE.BoxGeometry(0.65, height - 0.1, 0.65), marbleMat);
-        body.position.set(0, (height - 0.1) / 2, 0);
-        body.castShadow = body.receiveShadow = true;
-        g.add(body);
-
-        const base = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.08, 0.85), goldMat);
-        base.position.set(0, 0.04, 0);
-        g.add(base);
-
-    }
-
-    // Bục trưng bày nhỏ ở các phòng
-    addSmallPedestal(-28, -24, 1.1);
-    addSmallPedestal(28, -24, 1.1);
-    addSmallPedestal(-28, 10, 1.3);
-    addSmallPedestal(28, 10, 1.3);
-
+    addColumn(-5.0, 16.0);
+    addColumn(5.0, 16.0);
 
     return { collidableWalls };
 }
