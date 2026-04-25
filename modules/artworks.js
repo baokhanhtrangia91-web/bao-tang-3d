@@ -147,9 +147,9 @@ const GALLERY_DATA = [
         audioData: {
             url: 'model/(7) PSY - GANGNAM STYLE(강남스타일) M-V - YouTube.mp3', // Đổi đường dẫn audio thật của bạn vào đây
             subtitles: [
-                { start: 0, end: 4.5, text: "Chào mừng bạn, trước mắt bạn là bức họa Mona Lisa nổi tiếng." },
-                { start: 5.0, end: 9.5, text: "Đây là một trong những kiệt tác vĩ đại nhất của Leonardo da Vinci." },
-                { start: 10.0, end: 15.0, text: "Hãy chú ý đến nụ cười bí ẩn và kỹ thuật vẽ sfumato điêu luyện." }
+                { start: 0, end: 4.5, text: "sau đây là gang nam sờ ty le" },
+                { start: 5.0, end: 9.5, text: "enjoy" },
+                { start: 10.0, end: 15.0, text: "quá đẳng cấp" }
             ]
         }
     },

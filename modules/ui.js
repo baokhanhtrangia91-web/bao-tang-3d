@@ -8,6 +8,9 @@ export function setupUI() {
     const artTitle = document.getElementById('art-title');
     const artText  = document.getElementById('art-text');
     const artAudio = document.getElementById('art-audio');
+    if (artAudio) {
+        artAudio.volume = 0.3; // Chỉnh thành 0.3 (30%) hoặc tùy ý bạn
+    }
     
     const subtitleContainer = document.getElementById('subtitle-container');
     const subtitleText      = document.getElementById('subtitle-text');
