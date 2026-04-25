@@ -42,7 +42,6 @@ export function setupEnvironment(scene) {
     const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, color: 0xe0d5c0, roughness: 0.5 });
 
     // === ÁNH SÁNG MÔI TRƯỜNG ===
-    // Giảm nhẹ ambient so với lúc tắt đèn để các vùng sáng nổi bật hơn
     const ambient = new THREE.AmbientLight(0xfff8f0, 0.8);
     scene.add(ambient);
 
@@ -56,7 +55,6 @@ export function setupEnvironment(scene) {
         new THREE.MeshStandardMaterial({ map: floorTex, color: 0xcccccc, roughness: 0.6, metalness: 0.05 })
     );
     floor.rotation.x = -Math.PI / 2;
-    // BẬT LẠI: Nhận bóng đổ từ đèn chính
     floor.receiveShadow = true; 
     scene.add(floor);
 
@@ -84,13 +82,10 @@ export function setupEnvironment(scene) {
         const wall = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
         wall.position.set(x, h / 2, z);
         wall.castShadow = false; 
-        // Cho phép tường nhận bóng từ đèn Spotlight để không gian sâu hơn
         wall.receiveShadow = true; 
         scene.add(wall);
 
         addBoxCollider(w, h, d, x, h / 2, z);
-
-        
     }
 
     // === HELPER: VÒNG CUỐN ===
@@ -229,7 +224,6 @@ export function setupEnvironment(scene) {
 
     // ====================================================
     // BẬT LẠI: ĐÈN RỌI TƯỢNG (HERO LIGHT) 
-    // Đây là nguồn sáng duy nhất có castShadow = true
     // ====================================================
     const statueLight = new THREE.SpotLight(0xfff0dd, 400);
     statueLight.position.set(3, 13.5, statueZ + 12);
@@ -238,12 +232,12 @@ export function setupEnvironment(scene) {
     statueLight.decay    = 2;
     statueLight.distance = 55;
     statueLight.castShadow = true; 
-    statueLight.shadow.mapSize.set(1024, 1024); // Đủ nét để thấy bóng tượng
+    statueLight.shadow.mapSize.set(1024, 1024);
     statueLight.shadow.bias = -0.001;
     statueLight.target.position.set(0, 1.5, statueZ);
     scene.add(statueLight, statueLight.target);
 
-    // Đèn Fill (Nhẹ nhàng bổ trợ mặt tối của tượng, không tạo bóng đổ)
+    // Đèn Fill
     const statueFill = new THREE.SpotLight(0xc8deff, 60);
     statueFill.position.set(-5, 8, statueZ - 8);
     statueFill.angle    = Math.PI / 4;
@@ -263,26 +257,35 @@ export function setupEnvironment(scene) {
         scene.add(model);
     }, undefined, err => console.error('Lỗi tải model:', err));
 
-    // === ĐÈN TRẦN (Bật lại PointLight nhưng KHÔNG tạo bóng) ===
+    // ====================================================
+    // === ĐÈN TRẦN (Dùng file .glb) ===
+    // ====================================================
     function addCeilingLight(x, z) {
-        const panelMat = new THREE.MeshBasicMaterial({ color: 0xfff8e8 });
-        const panel = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.06, 1.0), panelMat);
-        panel.position.set(x, H - 0.04, z);
-        scene.add(panel);
-
-        const rimMat = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, metalness: 0.8, roughness: 0.2 });
-        const rim = new THREE.Mesh(new THREE.BoxGeometry(3.7, 0.08, 1.2), rimMat);
-        rim.position.set(x, H - 0.06, z);
-        scene.add(rim);
-
-        // Ánh sáng tỏa ra từ đèn trần để tạo vùng sáng trên tường/sàn
+        // Ánh sáng tỏa ra từ đèn trần
         const light = new THREE.PointLight(0xfff8f0, 80, 25);
         light.position.set(x, H - 0.5, z);
-        light.castShadow = false; // Tắt shadow để tối ưu
+        light.castShadow = false; 
         scene.add(light);
+
+        // Load model đèn trần (thay đổi tên file tại đây nếu cần)
+        gltfLoader.load('model/den_tran.glb', (gltf) => {
+            const model = gltf.scene;
+            model.position.set(x, H, z); 
+            model.scale.setScalar(5); // Tuỳ chỉnh độ lớn của đèn
+            
+            model.traverse(n => { 
+                if (n.isMesh) { 
+                    n.castShadow = false; 
+                    n.receiveShadow = true; 
+                } 
+            }); 
+            scene.add(model);
+        }, 
+        undefined, 
+        err => console.error(`Lỗi tải model đèn trần tại [${x}, ${z}]:`, err));
     }
+
     function addChandelier(x, z) {
-        // 1. Hạ điểm phát sáng xuống cách trần 4.5 đơn vị
         const light = new THREE.PointLight(0xffeacc, 120, 35);
         light.position.set(x, H - 4.5, z); 
         light.castShadow = false; 
@@ -292,11 +295,7 @@ export function setupEnvironment(scene) {
         
         gltfLoader.load('model/chandelier (2).glb', (gltf) => {
             const model = gltf.scene;
-            
-            // 2. Hạ mô hình đèn xuống cách trần 4.0 đơn vị (để nó thò ra khỏi trần)
             model.position.set(x, H - 5, z); 
-            
-            // 3. Phóng to model lên (thử số 10, nếu to quá thì giảm xuống 2, 3...)
             model.scale.setScalar(25); 
             
             model.traverse(n => { 
@@ -308,7 +307,6 @@ export function setupEnvironment(scene) {
             
             scene.add(model);
         }, 
-        // Thêm theo dõi tiến độ để chắc chắn file đang được tải
         (xhr) => {
             console.log(`Tiến độ tải đèn chùm: ${(xhr.loaded / xhr.total * 100)}%`);
         }, 
@@ -316,18 +314,18 @@ export function setupEnvironment(scene) {
     }
 
     // Căn phòng bên trái
-    addCeilingLight(-27, -15);
-    addCeilingLight(-27,   0);
-    addCeilingLight(-27,  15);
+    addChandelier(-27, -15);
+    addChandelier(-27,  0);
+    addChandelier(-27,  15);
 
     // Khu vực sảnh giữa
     addChandelier(  0,  -7);
-    addCeilingLight(  0,  22);
+    addChandelier(  0,  22);
 
-    // Căn phòng bên phải (Giữ nguyên)
-    addCeilingLight( 27, -15.5);
-    addCeilingLight( 27,  5);
-    addCeilingLight( 27,  22);
+    // Căn phòng bên phải
+    addChandelier( 27, -15.5);
+    addChandelier( 27,  5);
+    addChandelier( 27,  22);
 
     // ====================================================
     // NỘI THẤT PHÒNG TRỐNG
@@ -400,10 +398,9 @@ export function setupEnvironment(scene) {
         shade.castShadow = false; 
         g.add(shade);
 
-        // BẬT LẠI: Đèn hắt nhẹ từ góc phòng
         const lampLight = new THREE.PointLight(0xffe8a0, 20, 8, 2);
         lampLight.position.set(0, 2.2, 0);
-        lampLight.castShadow = false; // Không tạo bóng
+        lampLight.castShadow = false; 
         g.add(lampLight);
 
         const glowBulb = new THREE.Mesh(
