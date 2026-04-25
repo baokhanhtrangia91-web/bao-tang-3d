@@ -5,77 +5,81 @@ export function setupControls(camera, renderer, collidableWalls = []) {
     const controls = new PointerLockControls(camera, renderer.domElement);
 
     const movement = {
-        forward:  false,
-        backward: false,
-        left:     false,
-        right:    false,
-        sprint:   false,
-        zoom:     false,
-        crouch:   false, // <-- 1. Thêm trạng thái ngồi
+        forward:  false, backward: false,
+        left:     false, right:    false,
+        sprint:   false, zoom:     false, crouch:   false,
     };
 
-    let velocityY   = 0;
-    const gravity     = 30.0;
-    const jumpForce   = 10.0;
-    
-    // --- 2. Cấu hình chiều cao ---
-    const standingHeight = 2.4; // Chiều cao mặc định khi đứng
-    const crouchingHeight = 1.2; // Chiều cao khi ngồi
-    let currentHeight = standingHeight;
-    const crouchSpeed = 10.0; // Tốc độ chuyển đổi đứng/ngồi
-    
-    let canJump = false;
+    let velocityY = 0;
+    let canJump   = false;
+    const GRAVITY    = 30.0;
+    const JUMP_FORCE = 10.0;
 
-    // --- Cấu hình Zoom ---
-    const defaultFov = camera.fov || 75;
-    const zoomFov = 30;                  
-    const zoomSpeed = 15.0;              
+    const HEIGHT_STAND  = 2.9;
+    const HEIGHT_CROUCH = 1.45;
+    const CROUCH_SPEED  = 10.0;
+    let currentHeight   = HEIGHT_STAND;
+
+    const FOV_DEFAULT = camera.fov || 75;
+    const FOV_ZOOM    = 30;
+    const ZOOM_SPEED  = 15.0;
 
     const raycaster    = new THREE.Raycaster();
-    const playerRadius = 1.0;
+    const PLAYER_RADIUS = 0.8;
 
-    camera.position.y = standingHeight;
+    // FIX LỖI XUYÊN GÓC: Khôi phục 8 hướng quét (có thêm 4 tia chéo 45 độ)
+    const COLLISION_DIRS = [
+        new THREE.Vector3( 1, 0,  0),
+        new THREE.Vector3(-1, 0,  0),
+        new THREE.Vector3( 0, 0,  1),
+        new THREE.Vector3( 0, 0, -1),
+        new THREE.Vector3( 0.7071, 0,  0.7071),
+        new THREE.Vector3(-0.7071, 0,  0.7071),
+        new THREE.Vector3( 0.7071, 0, -0.7071),
+        new THREE.Vector3(-0.7071, 0, -0.7071),
+    ];
 
-    // --- UI  ---
-    const startBtn    = document.getElementById('start-btn');
+    camera.position.y = HEIGHT_STAND;
+
+    // --- UI ---
+    const startBtn     = document.getElementById('start-btn');
     const instructions = document.getElementById('instructions');
-    const crosshair   = document.getElementById('crosshair');
-    const minimapDOM  = document.getElementById('minimap-container'); 
-    const coordsDOM   = document.getElementById('coords-ui'); // <-- Thêm dòng này
+    const crosshair    = document.getElementById('crosshair');
+    const minimapDOM   = document.getElementById('minimap-container');
+    const coordsDOM    = document.getElementById('coords-ui');
 
     startBtn?.addEventListener('click', () => controls.lock());
 
     controls.addEventListener('lock', () => {
         instructions?.classList.add('hidden');
-        if (crosshair) crosshair.style.display = 'block';
-        if (minimapDOM) minimapDOM.style.display = 'block'; 
-        if (coordsDOM) coordsDOM.style.display = 'block'; // <-- Hiện tọa độ
+        if (crosshair)  crosshair.style.display  = 'block';
+        if (minimapDOM) minimapDOM.style.display  = 'block';
+        if (coordsDOM)  coordsDOM.style.display   = 'block';
     });
 
     controls.addEventListener('unlock', () => {
         instructions?.classList.remove('hidden');
-        if (crosshair) crosshair.style.display = 'none';
-        if (minimapDOM) minimapDOM.style.display = 'none'; 
-        if (coordsDOM) coordsDOM.style.display = 'none'; // <-- Ẩn tọa độ
+        if (crosshair)  crosshair.style.display  = 'none';
+        if (minimapDOM) minimapDOM.style.display  = 'none';
+        if (coordsDOM)  coordsDOM.style.display   = 'none';
     });
 
     // --- Phím điều khiển ---
     document.addEventListener('keydown', (e) => {
         switch (e.code) {
-            case 'KeyW':      movement.forward  = true;  break;
-            case 'KeyS':      movement.backward = true;  break;
-            case 'KeyA':      movement.left     = true;  break;
-            case 'KeyD':      movement.right    = true;  break;
-            case 'KeyZ':      movement.zoom     = true;  break; 
+            case 'KeyW':         movement.forward  = true;  break;
+            case 'KeyS':         movement.backward = true;  break;
+            case 'KeyA':         movement.left     = true;  break;
+            case 'KeyD':         movement.right    = true;  break;
+            case 'KeyZ':         movement.zoom     = true;  break;
             case 'ShiftLeft':
-            case 'ShiftRight': movement.sprint  = true;  break;
+            case 'ShiftRight':   movement.sprint   = true;  break;
             case 'ControlLeft':
-            case 'ControlRight': movement.crouch = true;  break; // <-- 3. Nhấn Ctrl để ngồi
+            case 'ControlRight': movement.crouch   = true;  break;
             case 'Space':
-                // Chỉ cho phép nhảy khi đang đứng (không ngồi)
-                if (canJump && !movement.crouch) { 
-                    velocityY = jumpForce; 
-                    canJump = false; 
+                if (canJump && !movement.crouch) {
+                    velocityY = JUMP_FORCE;
+                    canJump   = false;
                 }
                 break;
         }
@@ -83,88 +87,75 @@ export function setupControls(camera, renderer, collidableWalls = []) {
 
     document.addEventListener('keyup', (e) => {
         switch (e.code) {
-            case 'KeyW':      movement.forward  = false; break;
-            case 'KeyS':      movement.backward = false; break;
-            case 'KeyA':      movement.left     = false; break;
-            case 'KeyD':      movement.right    = false; break;
-            case 'KeyZ':      movement.zoom     = false; break; 
+            case 'KeyW':         movement.forward  = false; break;
+            case 'KeyS':         movement.backward = false; break;
+            case 'KeyA':         movement.left     = false; break;
+            case 'KeyD':         movement.right    = false; break;
+            case 'KeyZ':         movement.zoom     = false; break;
             case 'ShiftLeft':
-            case 'ShiftRight': movement.sprint  = false; break;
+            case 'ShiftRight':   movement.sprint   = false; break;
             case 'ControlLeft':
-            case 'ControlRight': movement.crouch = false; break; // <-- Nhả Ctrl để đứng lên
+            case 'ControlRight': movement.crouch   = false; break;
         }
     });
 
-    // 8 hướng để phát hiện va chạm tường
-    const directions = [
-        new THREE.Vector3( 1,    0,  0),
-        new THREE.Vector3(-1,    0,  0),
-        new THREE.Vector3( 0,    0,  1),
-        new THREE.Vector3( 0,    0, -1),
-        new THREE.Vector3( 0.707, 0,  0.707),
-        new THREE.Vector3(-0.707, 0,  0.707),
-        new THREE.Vector3( 0.707, 0, -0.707),
-        new THREE.Vector3(-0.707, 0, -0.707),
-    ];
-
+    // --- Vòng lặp update ---
     function update(delta) {
         if (!controls.isLocked) return;
 
-        // --- 4. Chỉnh tốc độ tùy theo trạng thái ---
-        let speed = 5.0; // Tốc độ đi bộ
-        if (movement.crouch) {
-            speed = 2.5; // Đi chậm khi ngồi
-        } else if (movement.sprint) {
-            speed = 10.0; // Chạy nhanh
-        }
-        const step = speed * delta;
-
-        const oldX = camera.position.x;
-        const oldZ = camera.position.z;
+        const speed = movement.crouch ? 2.5 : movement.sprint ? 10.0 : 5.0;
+        const step  = speed * delta;
 
         if (movement.forward)  controls.moveForward(step);
         if (movement.backward) controls.moveForward(-step);
         if (movement.left)     controls.moveRight(-step);
         if (movement.right)    controls.moveRight(step);
 
-        // --- Xử lý Zoom mượt ---
-        const targetFov = movement.zoom ? zoomFov : defaultFov;
+        const targetFov = movement.zoom ? FOV_ZOOM : FOV_DEFAULT;
         if (Math.abs(camera.fov - targetFov) > 0.1) {
-            camera.fov += (targetFov - camera.fov) * zoomSpeed * delta;
-            camera.updateProjectionMatrix(); 
+            camera.fov += (targetFov - camera.fov) * ZOOM_SPEED * delta;
+            camera.updateProjectionMatrix();
         }
 
-        // --- 5. Xử lý Ngồi (Lerp chiều cao) ---
-        const targetHeight = movement.crouch ? crouchingHeight : standingHeight;
+        const targetHeight = movement.crouch ? HEIGHT_CROUCH : HEIGHT_STAND;
         if (Math.abs(currentHeight - targetHeight) > 0.01) {
-            currentHeight += (targetHeight - currentHeight) * crouchSpeed * delta;
+            currentHeight += (targetHeight - currentHeight) * CROUCH_SPEED * delta;
         }
 
-        // Kiểm tra va chạm (sử dụng currentHeight thay cho playerHeight tĩnh)
+        // --- VẬT LÝ VA CHẠM SLIDE KÍN KẼ ---
         if (collidableWalls.length > 0) {
             const origin = camera.position.clone();
             origin.y = currentHeight / 2;
 
-            for (const dir of directions) {
+            for (const dir of COLLISION_DIRS) {
                 raycaster.set(origin, dir);
+                
+                // CẮT GIẢM TÍNH TOÁN: Chỉ quét trong bán kính của người chơi, xa hơn bỏ qua
+                raycaster.far = PLAYER_RADIUS; 
+                
                 const hits = raycaster.intersectObjects(collidableWalls, false);
-                if (hits.length > 0 && hits[0].distance < playerRadius) {
-                    camera.position.x = oldX;
-                    camera.position.z = oldZ;
-                    break;
+
+                if (hits.length > 0) {
+                    // hits[0].distance chắc chắn < PLAYER_RADIUS do đã set raycaster.far
+                    const overlap = PLAYER_RADIUS - hits[0].distance;
+                    
+                    camera.position.x -= dir.x * overlap;
+                    camera.position.z -= dir.z * overlap;
+                    
+                    // Cập nhật lại tâm ngay lập tức để góc chéo không bị cấn
+                    origin.x = camera.position.x;
+                    origin.z = camera.position.z;
                 }
             }
         }
 
-        // Trọng lực & nhảy
-        velocityY -= gravity * delta;
+        velocityY -= GRAVITY * delta;
         camera.position.y += velocityY * delta;
 
-        // Chạm đất (Sử dụng currentHeight làm mốc mặt đất của nhân vật)
         if (camera.position.y <= currentHeight) {
             camera.position.y = currentHeight;
             velocityY = 0;
-            canJump = true;
+            canJump   = true;
         }
     }
 
