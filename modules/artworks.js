@@ -180,7 +180,7 @@ const GALLERY_DATA = [
 
 const INFO_BOARDS = [
     { url: 'model/bang.jpg', w: 3.1, h: 4.24, x: -14.5, y: 2.3,  z:  27.16, ry: (Math.PI * 3) / 2 },
-    { url: 'model/bang.jpg', w: 3.1, h: 4.24, x:  14.5, y: 2.3,  z:  27.16, ry:  Math.PI / 2       },
+    { url: 'model/z7754718409982_fa3b56a56702c325f8c0a95f4d907868.jpg', w: 3.1, h: 4.24, x:  14.5, y: 2.3,  z:  27.16, ry:  Math.PI / 2       },
     { url: 'model/bang.jpg', w: 6,   h: 8.4,  x:  10.25,y: 4.32, z:  14.2,  ry:  Math.PI            },
 ];
 

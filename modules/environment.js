@@ -37,10 +37,10 @@ export function setupEnvironment(scene) {
     const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, color: 0xe0d5c0, roughness: 0.5 });
 
     // === ÁNH SÁNG MÔI TRƯỜNG (tối ưu) ===
-    const ambient = new THREE.AmbientLight(0xfff8f0, 1.0);
+    const ambient = new THREE.AmbientLight(0xd4a373, 0.8);
     scene.add(ambient);
 
-    const hemiLight = new THREE.HemisphereLight(0xfff5e8, 0x3a2a18, 0.5);
+    const hemiLight = new THREE.HemisphereLight(0xc29b70, 0x1a120b, 0.4);
     hemiLight.position.set(0, H, 0);
     scene.add(hemiLight);
 
@@ -367,6 +367,92 @@ export function setupEnvironment(scene) {
 
     addColumn(-5.0, 16.0);
     addColumn( 5.0, 16.0);
+
+    // ====================================================
+    // LỒNG KÍNH (Hiển thị model 3D) - Cao 5.6
+    // ====================================================
+    function addGlassDisplayCase(w, h, d, x, baseHeight, z) {
+        // Sử dụng MeshPhysicalMaterial để tạo hiệu ứng kính chân thực
+        const glassMat = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            metalness: 0.1,
+            roughness: 0.05,
+            transmission: 0.9, // Độ trong suốt của kính
+            opacity: 1,
+            transparent: true,
+            side: THREE.DoubleSide
+        });
+
+        const glassGeo = new THREE.BoxGeometry(w, h, d);
+        const glassMesh = new THREE.Mesh(glassGeo, glassMat);
+        // Đặt lồng kính nằm ngay trên mặt bệ
+        glassMesh.position.set(x, baseHeight + h / 2, z);
+        scene.add(glassMesh);
+
+        // Thêm viền đen (frame) để lồng kính nổi bật và rõ khối hơn
+        const edges = new THREE.EdgesGeometry(glassGeo);
+        const frameMat = new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 });
+        const frame = new THREE.LineSegments(edges, frameMat);
+        frame.position.copy(glassMesh.position);
+        scene.add(frame);
+
+        // Thêm va chạm để camera không đi xuyên qua lồng kính
+        addBoxCollider(w, h, d, x, baseHeight + h / 2, z);
+    }
+
+    // Tượng đặt ở x = 0, z = statueZ (-7). Chiều cao bệ khoảng 1.6
+    // (rộng 6, cao 5.6, sâu 6, toạ độ x=32, cao độ đáy=1.6, toạ độ z=5)
+    addGlassDisplayCase(9, 7.6, 16, 35, 0.1, 3.62);
+
+
+    // ====================================================
+    // LAN CAN (Rào chắn phòng bên phải) - Cao 1.4
+    // ====================================================
+    function addRailing(length, x, z, ry = 0) {
+        const h = 1.4; // Chiều cao 1.4 theo yêu cầu
+        const g = new THREE.Group();
+        
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
+        const glassPanelMat = new THREE.MeshPhysicalMaterial({ 
+            color: 0xeef5f9, transmission: 0.7, opacity: 1, transparent: true, side: THREE.DoubleSide 
+        });
+
+        // Thanh tay vịn trên cùng
+        const topRail = new THREE.Mesh(new THREE.BoxGeometry(length, 0.05, 0.08), metalMat);
+        topRail.position.set(0, h, 0);
+        topRail.castShadow = true;
+        g.add(topRail);
+
+        // Tấm kính chắn ngang
+        const glassPanel = new THREE.Mesh(new THREE.BoxGeometry(length - 0.1, h - 0.15, 0.02), glassPanelMat);
+        glassPanel.position.set(0, (h - 0.15) / 2 + 0.05, 0);
+        g.add(glassPanel);
+
+        // Trụ kim loại ở hai đầu
+        const postGeo = new THREE.CylinderGeometry(0.03, 0.03, h, 8);
+        const post1 = new THREE.Mesh(postGeo, metalMat);
+        post1.position.set(-length / 2 + 0.05, h / 2, 0);
+        post1.castShadow = true;
+        g.add(post1);
+
+        const post2 = new THREE.Mesh(postGeo, metalMat);
+        post2.position.set(length / 2 - 0.05, h / 2, 0);
+        post2.castShadow = true;
+        g.add(post2);
+
+        g.position.set(x, 0, z);
+        g.rotation.y = ry;
+        scene.add(g);
+        
+        // Thêm va chạm cho lan can
+        addBoxCollider(length, h, 0.2, x, h / 2, z, ry);
+    }
+
+    // Đặt lan can ở căn phòng bên phải (Tâm phòng phải khoảng x = 27)
+    // Ví dụ: Tạo một dải lan can dài 12 đơn vị, nằm dọc chắn giữa phòng
+    addRailing(12, 29, 0, Math.PI / 2); 
+    // Hoặc thêm một đoạn lan can ngang
+    addRailing(8, 32, 8, 0);
 
     return { collidableWalls };
 }
