@@ -158,10 +158,6 @@ const GALLERY_DATA = [
     { url: 'tranh/tranh11.jpg', w: 4,    h: 4,     x: -13.4, y: 5,   z: -20,   ry:  Math.PI / 2,  title: 'Tác Phẩm 11',      desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.',         frameStyle: 'gold'   },
     { url: 'tranh/tranh12.jpg', w: 5,    h: 3,     x: -13.4, y: 5,   z: -10,   ry:  Math.PI / 2,  title: 'Tác Phẩm 12',      desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.',         frameStyle: 'wood'   },
 
-    { url: 'tranh/tranh8.jpg',  w: 5,    h: 5,     x:  38.9, y: 5,   z: -15,   ry: -Math.PI / 2,  title: 'Tác Phẩm 8',       desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.',         frameStyle: 'gold'   },
-    { url: 'tranh/tranh9.jpg',  w: 8,    h: 4,     x:  38.9, y: 5,   z:   0,   ry: -Math.PI / 2,  title: 'Tác Phẩm 9',       desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.',         frameStyle: 'dark'   },
-    { url: 'tranh/tranh10.jpg', w: 5,    h: 7,     x:  38.9, y: 5,   z:  15,   ry: -Math.PI / 2,  title: 'Tác Phẩm 10',      desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.',         frameStyle: 'silver' },
-
     { url: 'tranh/tranh1.jpg',  w: 4,    h: 5,     x: -39.0, y: 5,   z: -22,   ry:  Math.PI / 2,  title: 'Tranh 1',           desc: 'Nghệ thuật trừu tượng đương đại.',                             frameStyle: 'gold'   },
     { url: 'tranh/tranh2.jpg',  w: 5,    h: 3.5,   x: -39.0, y: 5,   z: -10,   ry:  Math.PI / 2,  title: 'Tranh 2',           desc: 'Phong cảnh thiên nhiên kỳ vĩ.',                                frameStyle: 'silver' },
     { url: 'tranh/tranh3.jpg',  w: 4,    h: 4,     x: -39.0, y: 5,   z:   2,   ry:  Math.PI / 2,  title: 'Tranh 3',           desc: 'Chân dung người phụ nữ cổ điển.',                              frameStyle: 'wood'   },

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { interactableObjects } from './artworks.js';
 
-const INTERACTION_DIST = 16; // Tăng khoảng cách nhận diện lên một chút cho dễ bấm
+const INTERACTION_DIST = 6; // Tăng khoảng cách nhận diện lên một chút cho dễ bấm
 
 export function setupUI() {
     const artUI    = document.getElementById('art-description');
