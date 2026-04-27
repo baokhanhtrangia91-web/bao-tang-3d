@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 
 export function setupEnvironment(scene) {
     const W = 80;
@@ -10,7 +11,9 @@ export function setupEnvironment(scene) {
     const collidableWalls = [];
     const loader = new THREE.TextureLoader();
     const gltfLoader = new GLTFLoader();
-
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+    gltfLoader.setDRACOLoader(dracoLoader);
     // Collider vô hình — dùng chung 1 material cho tất cả
     const colliderMat = new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide });
 
@@ -257,10 +260,10 @@ export function setupEnvironment(scene) {
     statueFill.target.position.set(0, 1.5, statueZ);
     scene.add(statueFill, statueFill.target);
 
-    gltfLoader.load('model/da_vinci_tank.glb', (gltf) => {
+    gltfLoader.load('model/David_statue.glb', (gltf) => {
         const model = gltf.scene;
-        model.position.set(0, 1.3, statueZ);
-        model.scale.setScalar(80);
+        model.position.set(0.6, 1.7, statueZ);
+        model.scale.setScalar(0.7);
         model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
         scene.add(model);
     }, undefined, err => console.error('Lỗi tải model:', err));
