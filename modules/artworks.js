@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ARTWORKS_INFO } from '../data.js';
 
 export const interactableObjects = [];
 
@@ -21,11 +22,15 @@ const CORNER_MATERIALS = {
 
 const BACKING_MAT = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0 });
 
+// =====================================================
+// TẠO KHUNG
+// =====================================================
 function createFrame(w, h, depth, frameStyle) {
     frameStyle = frameStyle || 'gold';
     const group = new THREE.Group();
     const FW = 0.18;
     const outerW = w + FW * 2;
+
     const mat = FRAME_MATERIALS[frameStyle] || FRAME_MATERIALS.bronze;
     const cornerMat = CORNER_MATERIALS[frameStyle] || CORNER_MATERIALS.other;
 
@@ -35,6 +40,7 @@ function createFrame(w, h, depth, frameStyle) {
         { size: [FW, h, depth], pos: [-w / 2 - FW / 2, 0, 0] },
         { size: [FW, h, depth], pos: [w / 2 + FW / 2, 0, 0] },
     ];
+
     for (const { size, pos } of bars) {
         const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), mat);
         mesh.position.set(...pos);
@@ -43,149 +49,162 @@ function createFrame(w, h, depth, frameStyle) {
 
     const cs = FW + 0.02;
     for (const [cx, cy] of [
-        [-w / 2 - FW / 2, h / 2 + FW / 2], [w / 2 + FW / 2, h / 2 + FW / 2],
-        [-w / 2 - FW / 2, -h / 2 - FW / 2], [w / 2 + FW / 2, -h / 2 - FW / 2],
+        [-w / 2 - FW / 2, h / 2 + FW / 2],
+        [w / 2 + FW / 2, h / 2 + FW / 2],
+        [-w / 2 - FW / 2, -h / 2 - FW / 2],
+        [w / 2 + FW / 2, -h / 2 - FW / 2],
     ]) {
         const c = new THREE.Mesh(new THREE.BoxGeometry(cs, cs, depth + 0.01), cornerMat);
         c.position.set(cx, cy, 0);
         group.add(c);
     }
-    group.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+
+    group.traverse(n => {
+        if (n.isMesh) {
+            n.castShadow = true;
+            n.receiveShadow = true;
+        }
+    });
+
     return group;
 }
 
 // =====================================================
-// HÀM addArt CHÍNH
+// ADD ART
 // =====================================================
 function addArt(scene, loader, opts) {
     const {
         url, w, h, x, z, ry, title, desc,
-        frameDepth, frameStyle, isInfoBoard, audioData
+        frameDepth, frameStyle, isInfoBoard, audioData, artInfo
     } = Object.assign({
-        y: 5, ry: 0, title: '', desc: '',
-        frameDepth: 0.12, frameStyle: 'gold',
-        isInfoBoard: false, audioData: null
+        y: 5,
+        ry: 0,
+        title: '',
+        desc: '',
+        frameDepth: 0.12,
+        frameStyle: 'gold',
+        isInfoBoard: false,
+        audioData: null,
+        artInfo: null
     }, opts);
 
     const y = opts.y !== undefined ? opts.y : 5;
+
     const tex = loader.load(url);
     tex.colorSpace = THREE.SRGBColorSpace;
 
     const art = new THREE.Mesh(
         new THREE.PlaneGeometry(w, h),
-        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, metalness: 0.0 })
+        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 })
     );
+
     art.position.z = frameDepth / 2 + 0.005;
 
-    // Đánh dấu Object là BỨC TRANH
-    art.userData = { isArt: true, title, desc };
+    // 🔥 QUAN TRỌNG: lưu full info
+    art.userData = {
+        isArt: true,
+        title,
+        desc,
+        artInfo
+    };
+
     interactableObjects.push(art);
 
     const frame = createFrame(w, h, frameDepth, isInfoBoard ? 'dark' : frameStyle);
-    const backing = new THREE.Mesh(new THREE.BoxGeometry(w + 0.42, h + 0.42, 0.04), BACKING_MAT);
+
+    const backing = new THREE.Mesh(
+        new THREE.BoxGeometry(w + 0.42, h + 0.42, 0.04),
+        BACKING_MAT
+    );
     backing.position.z = -frameDepth / 2 - 0.02;
 
     const group = new THREE.Group();
     group.add(backing, frame, art);
 
     // =====================================================
-    // NÚT PHÁT AUDIO (CỤC HỘP TRÒN ĐỎ)
+    // AUDIO BUTTON
     // =====================================================
     if (audioData && audioData.url) {
         const audioBtnGroup = new THREE.Group();
 
-        // 1. Tấm nền (Hộp đen)
         const baseMesh = new THREE.Mesh(
             new THREE.BoxGeometry(0.5, 0.3, 0.04),
-            new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 })
+            new THREE.MeshStandardMaterial({ color: 0x222222 })
         );
 
-        // 2. Nút tròn màu đỏ (Cylinder nằm ngang)
         const btnMesh = new THREE.Mesh(
             new THREE.CylinderGeometry(0.08, 0.08, 0.02, 32),
-            new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.3, metalness: 0.2 })
+            new THREE.MeshStandardMaterial({ color: 0xcc0000 })
         );
-        btnMesh.rotation.x = Math.PI / 2;
-        btnMesh.position.z = 0.02 + 0.01;
 
-        // 3. Khối tàng hình bọc bên ngoài để tia ngắm dễ chạm trúng
+        btnMesh.rotation.x = Math.PI / 2;
+        btnMesh.position.z = 0.03;
+
         const hitBox = new THREE.Mesh(
             new THREE.BoxGeometry(0.8, 0.6, 0.1),
             new THREE.MeshBasicMaterial({ visible: false })
         );
 
-        // Gắn dữ liệu audio vào các vật thể này để UI.js có thể nhận diện
-        const btnData = { isAudioButton: true, audioData: audioData };
+        const btnData = { isAudioButton: true, audioData };
+
         baseMesh.userData = btnData;
         btnMesh.userData = btnData;
         hitBox.userData = btnData;
 
-        // Push cả 3 vào mảng Raycaster
         interactableObjects.push(hitBox, baseMesh, btnMesh);
 
         audioBtnGroup.add(baseMesh, btnMesh, hitBox);
-        // Đặt lùi xuống dưới bức tranh một đoạn (Y: -h/2 - 0.5)
         audioBtnGroup.position.set(0, -h / 2 - 0.5, frameDepth / 2);
+
         group.add(audioBtnGroup);
     }
 
     group.position.set(x, y, z);
     group.rotation.y = ry;
+
     scene.add(group);
 }
 
 // =====================================================
-// DANH SÁCH TRANH
+// CHỈ CHỨA TỌA ĐỘ
 // =====================================================
-const GALLERY_DATA = [
-    // --- Tường phía sau (sảnh chính) ---
-    {
-        url: 'tranh/Leonardo da Vinci/6.jpg', w: 5, h: 7.5, x: 0, y: 5.5, z: -28.9, ry: 0,
-        title: 'Mona Lisa',
-        desc: 'Kiệt tác của Leonardo da Vinci, được vẽ vào đầu thế kỷ 16.',
-        frameStyle: 'gold',
-        audioData: {
-            url: 'audio/Leonardo da Vinci/6.mp3' // Đổi đường dẫn audio thật của bạn vào đây
-        }
-    },
+const ARTWORKS_POSITION = [
+    { id: '6', w: 5, h: 7.5, x: 0, y: 5.5, z: -28.9, ry: 0 },
+    { id: '7', w: 20.7, h: 11.64, x: 13.4, y: 6.9, z: -7.5, ry: -Math.PI / 2 },
+    { id: '8', w: 4, h: 4, x: -13.4, y: 5, z: -20, ry: Math.PI / 2 },
 
-    { url: 'tranh/Leonardo da Vinci/7.jpg', w: 20.7, h: 11.64, x: 13.4, y: 6.9, z: -7.5, ry: -Math.PI / 2, title: 'Bữa Tối Cuối Cùng', desc: 'Bức bích họa nổi tiếng của Leonardo da Vinci.', frameStyle: 'gold', audioData: { url: 'audio/Leonardo da Vinci/7.mp3' } },
-    { url: 'tranh/Leonardo da Vinci/8.jpg', w: 4, h: 4, x: -13.4, y: 5, z: -20, ry: Math.PI / 2, title: 'Tác Phẩm 11', desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold', audioData: { url: 'audio/Leonardo da Vinci/8.mp3' } },
-
-
-    { url: 'tranh/Michelangelo/1.jpg', w: 18, h: 10, x: -26, y: 8, z: -28.9, ry: 0, title: 'The Creation of Adam', desc: 'by Michelangelo', frameStyle: 'gold', audioData: { url: 'audio/Michelangelo/1.mp3' } },
-    { url: 'tranh/Michelangelo/2.jpg', w: 8, h: 7, x: -38.9, y: 6, z: -10, ry: Math.PI / 2, title: 'Doni Tondo', desc: 'by Michelangelo', frameStyle: 'silver', audioData: { url: 'audio/Michelangelo/2.mp3' } },
-    { url: 'tranh/Michelangelo/3.jpg', w: 8, h: 8, x: -38.9, y: 6, z: 18, ry: Math.PI / 2, title: 'Tranh 3', desc: 'by Michelangelo', frameStyle: 'wood', audioData: { url: 'audio/Michelangelo/3.mp3' } },
-    { url: 'tranh/Michelangelo/4.jpg', w: 9, h: 10.5, x: -14.6, y: 7, z: -15, ry: -Math.PI / 2, title: 'The Torment of Saint Anthony', desc: 'Tác phẩm đầu tay của Michelangelo khi ông khoảng 12 tuổi, lấy cảm hứng từ câu chuyện của Athanasius of Alexandria và tranh khắc của Martin Schongauer.', frameStyle: 'gold', audioData: { url: 'audio/Michelangelo/4.mp3' } },
-    { url: 'tranh/Michelangelo/5.jpg', w: 9, h: 7, x: -14.6, y: 7, z: 2, ry: -Math.PI / 2, title: 'Thánh Peter bị đóng đinh', desc: 'Sơn dầu phong cảnh Châu Âu.', frameStyle: 'bronze', audioData: { url: 'audio/Michelangelo/5.mp3' } },
-
-    { url: 'tranh/Leonardo da Vinci/9.jpg', w: 6, h: 6.5, x: -13.4, y: 6, z: -8.5, ry: Math.PI / 2, title: 'Tranh 13', desc: 'Hoa sen trong nghệ thuật Á Đông.', frameStyle: 'gold', audioData: { url: 'audio/Leonardo da Vinci/9.mp3' } },
-    { url: 'tranh/Leonardo da Vinci/10.jpg', w: 8, h: 6.5, x: -13.4, y: 6, z: 5, ry: Math.PI / 2, title: 'Tranh 14', desc: 'Bình nguyên trải dài vô tận.', frameStyle: 'silver', audioData: { url: 'audio/Leonardo da Vinci/10.mp3' } },
-
-
-    { url: 'tranh/Vincent van Gogh/11.jpg', w: 5, h: 4, x: 38.9, y: 5, z: -24.2, ry: -Math.PI / 2, title: 'Tranh 18', desc: 'Cảnh hoàng hôn trên sông.', frameStyle: 'gold', audioData: { url: 'audio/Vincent van Gogh/11.mp3' } },
-    { url: 'tranh/Vincent van Gogh/12.jpg', w: 4, h: 5.5, x: 38.9, y: 5, z: -12.9, ry: -Math.PI / 2, title: 'Tranh 19', desc: 'Phố cổ Hội An về đêm.', frameStyle: 'silver', audioData: { url: 'audio/Vincent van Gogh/12.mp3' } },
-    { url: 'tranh/Vincent van Gogh/13.png', w: 10, h: 8, x: 25, y: 7, z: -28.9, ry: 0, title: 'Tranh 20', desc: 'Biển cả và trăng tròn.', frameStyle: 'wood', audioData: { url: 'audio/Vincent van Gogh/13.mp3' } },
-
-    { url: 'tranh/Vincent van Gogh/14.jpg', w: 5, h: 4, x: 29, y: 5, z: -4.4, ry: 0, title: 'Tranh 21', desc: 'Mùa thu lá vàng.', frameStyle: 'gold', audioData: { url: 'audio/Vincent van Gogh/14.mp3' } },
-    { url: 'tranh/Vincent van Gogh/15.png', w: 7, h: 9, x: 14.6, y: 7, z: 8.5, ry: Math.PI / 2, title: 'Tranh 22', desc: 'Chân dung nghệ sĩ.', frameStyle: 'bronze', audioData: { url: 'audio/Vincent van Gogh/15.mp3' } },
-    { url: 'tranh/Vincent van Gogh/16.png', w: 6, h: 6, x: 38.9, y: 6, z: 14.5, ry: -Math.PI / 2, title: 'Tranh 23', desc: 'Nghệ thuật pop art hiện đại.', frameStyle: 'silver', audioData: { url: 'audio/Vincent van Gogh/16.mp3' } },
 ];
 
-const INFO_BOARDS = [
-    { url: 'model/bang.jpg', w: 3.1, h: 4.24, x: -16.3, y: 2.3, z: 28.9, ry: (Math.PI * 3) },
-    { url: 'model/bang3.png', w: 3.1, h: 4.24, x: 14.5, y: 2.3, z: 27.16, ry: Math.PI / 2 },
-    { url: 'model/bang2.png', w: 6, h: 8.4, x: 10.25, y: 4.32, z: 14.2, ry: Math.PI },
-];
+// =====================================================
+// GHÉP DATA
+// =====================================================
+const GALLERY_DATA = ARTWORKS_POSITION.map(pos => {
+    const info = ARTWORKS_INFO.find(a => a.id === pos.id);
 
+    if (!info) {
+        console.warn('Missing data for id:', pos.id);
+        return null;
+    }
+
+    return {
+        ...pos,
+        url: info.imageUrl,
+        title: info.title,
+        desc: info.desc,
+        frameStyle: info.frameStyle,
+        artInfo: info,
+        audioData: { url: info.audioUrl }
+    };
+}).filter(Boolean);
+
+// =====================================================
+// LOAD
+// =====================================================
 export function loadArtworks(scene) {
     const loader = new THREE.TextureLoader();
-    for (const item of GALLERY_DATA) addArt(scene, loader, item);
-    for (const board of INFO_BOARDS) {
-        addArt(scene, loader, {
-            ...board,
-            title: 'Thông Tin', desc: 'Khu vực trưng bày chính.',
-            frameDepth: 0.6, frameStyle: 'dark', isInfoBoard: true,
-        });
+
+    for (const item of GALLERY_DATA) {
+        if (!item) continue;
+        addArt(scene, loader, item);
     }
 }
