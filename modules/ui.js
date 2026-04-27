@@ -1,107 +1,86 @@
 import * as THREE from 'three';
 import { interactableObjects } from './artworks.js';
 
-const INTERACTION_DIST = 16; // Tăng khoảng cách nhận diện lên một chút cho dễ bấm
+const INTERACTION_DIST = 6;
 
 export function setupUI() {
     const artUI    = document.getElementById('art-description');
     const artTitle = document.getElementById('art-title');
     const artText  = document.getElementById('art-text');
     const artAudio = document.getElementById('art-audio');
-    
+    if (artAudio) artAudio.volume = 0.3;
+
     const subtitleContainer = document.getElementById('subtitle-container');
     const subtitleText      = document.getElementById('subtitle-text');
-    
-    let currentSubtitles    = null; 
-    let hoveredObj          = null;  
-    let isInfoShowing       = false; 
-    let playingAudioUrl     = "";
 
-    // --- TẠO TOOLTIP NHẮC NHỞ TƯƠNG TÁC ---
-    let promptUI = document.getElementById('interact-prompt');
-    if (!promptUI) {
-        promptUI = document.createElement('div');
-        promptUI.id = 'interact-prompt';
-        promptUI.style.position = 'absolute';
-        promptUI.style.top = '55%'; 
-        promptUI.style.left = '50%';
-        promptUI.style.transform = 'translate(-50%, -50%)';
-        promptUI.style.color = '#fff';
-        promptUI.style.background = 'rgba(0, 0, 0, 0.6)';
-        promptUI.style.padding = '8px 16px';
-        promptUI.style.border = '1px solid #d4af37';
-        promptUI.style.borderRadius = '6px';
-        promptUI.style.fontFamily = 'sans-serif';
-        promptUI.style.fontSize = '15px';
-        promptUI.style.pointerEvents = 'none';
-        promptUI.style.display = 'none'; 
-        promptUI.style.zIndex = '10';
-        document.body.appendChild(promptUI);
-    }
+    let currentSubtitles = null;
+    let hoveredObj       = null;
+    let isInfoShowing    = false;
+    let playingAudioUrl  = '';
 
-    // --- XỬ LÝ AUDIO & PHỤ ĐỀ ---
+    // Tooltip nhắc tương tác
+    const promptUI = (() => {
+        const el = document.createElement('div');
+        Object.assign(el.style, {
+            position: 'absolute', top: '55%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: '#fff', background: 'rgba(0,0,0,0.6)',
+            padding: '8px 16px', border: '1px solid #d4af37',
+            borderRadius: '6px', fontFamily: 'sans-serif',
+            fontSize: '15px', pointerEvents: 'none',
+            display: 'none', zIndex: '10',
+        });
+        document.body.appendChild(el);
+        return el;
+    })();
+
+    // --- Audio & phụ đề ---
     if (artAudio) {
         artAudio.addEventListener('timeupdate', () => {
-            if (!currentSubtitles || currentSubtitles.length === 0) return;
+            if (!currentSubtitles || !currentSubtitles.length) return;
             const time = artAudio.currentTime;
-            const activeSub = currentSubtitles.find(sub => time >= sub.start && time <= sub.end);
-            
-            if (activeSub) {
-                subtitleText.innerHTML = activeSub.text;
+            const sub  = currentSubtitles.find(s => time >= s.start && time <= s.end);
+            if (sub) {
+                subtitleText.innerHTML  = sub.text;
                 subtitleText.style.display = 'inline-block';
             } else {
                 subtitleText.style.display = 'none';
             }
         });
 
-        // Kết thúc audio -> giấu chữ đi
         artAudio.addEventListener('ended', () => {
             subtitleContainer.style.display = 'none';
-            playingAudioUrl = "";
+            playingAudioUrl  = '';
+            currentSubtitles = null;
         });
     }
 
     function stopAudio() {
-        if (artAudio) { 
-            artAudio.pause(); 
-            artAudio.currentTime = 0; 
-        }
+        if (artAudio) { artAudio.pause(); artAudio.currentTime = 0; }
         if (subtitleContainer) subtitleContainer.style.display = 'none';
-        playingAudioUrl = "";
+        playingAudioUrl  = '';
         currentSubtitles = null;
     }
 
-    // --- BẬT/TẮT AUDIO KHI ẤN E VÀO NÚT ĐỎ ---
     function toggleAudioPlayback(audioData) {
-        if (!audioData || !audioData.url) return;
-        
-        // Nếu bài này đang phát -> Ấn E lần nữa để Tắt
-        if (playingAudioUrl === audioData.url && !artAudio.paused) {
-            stopAudio();
-            return;
-        }
-
-        stopAudio(); // Tắt bài cũ (nếu có)
-        
-        playingAudioUrl = audioData.url;
-        artAudio.src = audioData.url;
-        currentSubtitles = audioData.subtitles || [];
-        
+        if (!audioData?.url) return;
+        if (playingAudioUrl === audioData.url && !artAudio.paused) { stopAudio(); return; }
+        stopAudio();
+        playingAudioUrl      = audioData.url;
+        artAudio.src         = audioData.url;
+        currentSubtitles     = audioData.subtitles || [];
         subtitleContainer.style.display = 'block';
-        subtitleText.style.display = 'none'; 
-        
+        subtitleText.style.display      = 'none';
         artAudio.play().catch(e => console.log(e));
     }
 
-    // --- HIỆN THÔNG TIN KHI ẤN E VÀO BỨC TRANH ---
     function showArtInfo(title, desc) {
         if (!artUI) return;
         if (artTitle) artTitle.textContent = title;
         if (artText)  artText.textContent  = desc;
-
         artUI.style.display = 'block';
-        isInfoShowing = true;
-        promptUI.style.display = 'none'; // Giấu nhắc nhở đi cho đỡ vướng mắt
+        isInfoShowing       = true;
+        promptUI.style.display = 'none';
     }
 
     function hideArtInfo() {
@@ -109,60 +88,43 @@ export function setupUI() {
         isInfoShowing = false;
     }
 
-    // --- BẮT SỰ KIỆN PHÍM E ---
+    // Phím E
     document.addEventListener('keydown', (e) => {
-        if (e.code === 'KeyE' && hoveredObj) {
-            
-            // 1. Nhìn vào BỨC TRANH
-            if (hoveredObj.userData.isArt) {
-                if (isInfoShowing) {
-                    hideArtInfo();
-                    promptUI.style.display = 'block'; 
-                } else {
-                    showArtInfo(hoveredObj.userData.title, hoveredObj.userData.desc);
-                }
-            } 
-            // 2. Nhìn vào NÚT AUDIO ĐỎ
-            else if (hoveredObj.userData.isAudioButton) {
-                toggleAudioPlayback(hoveredObj.userData.audioData);
-            }
+        if (e.code !== 'KeyE' || !hoveredObj) return;
+        if (hoveredObj.userData.isArt) {
+            isInfoShowing ? (hideArtInfo(), promptUI.style.display = 'block')
+                          : showArtInfo(hoveredObj.userData.title, hoveredObj.userData.desc);
+        } else if (hoveredObj.userData.isAudioButton) {
+            toggleAudioPlayback(hoveredObj.userData.audioData);
         }
     });
 
-    // --- TIA NGẮM (RAYCASTER) ---
-    const raycaster  = new THREE.Raycaster();
+    // Raycaster — reuse vector
+    const raycaster    = new THREE.Raycaster();
     const screenCenter = new THREE.Vector2(0, 0);
 
     function updateInteraction(camera) {
         if (!camera) return;
-
         raycaster.setFromCamera(screenCenter, camera);
         const hits = raycaster.intersectObjects(interactableObjects, false);
 
         if (hits.length > 0 && hits[0].distance < INTERACTION_DIST) {
             const obj = hits[0].object;
-            
             if (obj !== hoveredObj) {
-                hideArtInfo(); // Tự động đóng thông tin của tranh cũ
+                hideArtInfo();
                 hoveredObj = obj;
-                
-                // Đổi chữ hiển thị tùy thuộc vào vật thể ngắm trúng
                 if (obj.userData.isArt) {
-                    promptUI.innerHTML = 'Nhấn <b>[E]</b> để đọc thông tin';
+                    promptUI.innerHTML     = 'Nhấn <b>[E]</b> để đọc thông tin';
                     promptUI.style.display = 'block';
                 } else if (obj.userData.isAudioButton) {
-                    promptUI.innerHTML = 'Nhấn <b>[E]</b> để Bật/Tắt Thuyết Minh';
+                    promptUI.innerHTML     = 'Nhấn <b>[E]</b> để Bật/Tắt Thuyết Minh';
                     promptUI.style.display = 'block';
                 }
             }
-        } else {
-            // Không ngắm vào cái gì cả
-            if (hoveredObj !== null) {
-                hoveredObj = null;
-                promptUI.style.display = 'none'; 
-                hideArtInfo(); 
-                // Ở đây mình KHÔNG gọi stopAudio() để bạn có thể vừa đi dạo vừa nghe thuyết minh.
-            }
+        } else if (hoveredObj !== null) {
+            hoveredObj             = null;
+            promptUI.style.display = 'none';
+            hideArtInfo();
         }
     }
 

@@ -153,7 +153,6 @@ const GALLERY_DATA = [
     { url: 'tranh/Leonardo da Vinci/8.jpg', w: 4, h: 4, x: -13.4, y: 5, z: -20, ry: Math.PI / 2, title: 'Tác Phẩm 11', desc: 'Tác phẩm trưng bày tại bảo tàng nghệ thuật virtual.', frameStyle: 'gold', audioData: { url: 'audio/Leonardo da Vinci/8.mp3' } },
 
 
-
     { url: 'tranh/Michelangelo/1.jpg', w: 18, h: 10, x: -26, y: 8, z: -28.9, ry: 0, title: 'The Creation of Adam', desc: 'by Michelangelo', frameStyle: 'gold', audioData: { url: 'audio/Michelangelo/1.mp3' } },
     { url: 'tranh/Michelangelo/2.jpg', w: 8, h: 7, x: -38.9, y: 6, z: -10, ry: Math.PI / 2, title: 'Doni Tondo', desc: 'by Michelangelo', frameStyle: 'silver', audioData: { url: 'audio/Michelangelo/2.mp3' } },
     { url: 'tranh/Michelangelo/3.jpg', w: 8, h: 8, x: -38.9, y: 6, z: 18, ry: Math.PI / 2, title: 'Tranh 3', desc: 'by Michelangelo', frameStyle: 'wood', audioData: { url: 'audio/Michelangelo/3.mp3' } },
