@@ -391,19 +391,14 @@ export function setupEnvironment(scene) {
     addColumn(-5.0, 16.0); addColumn(5.0, 16.0);
 
     // =====================================================
-    // LỒNG KÍNH — dùng chung glassMat & caseFrameMat
-    // Đèn: 1 SpotLight tổng hợp thay vì 2 SpotLight/lồng
+    // LỒNG KÍNH — dùng chung glassMat
+    // (ĐÃ BỎ: caseFrameMat, cột khung 4 góc, viền ngang trên đỉnh)
     // =====================================================
     const CASE_H = 6;
     const glassMat = new THREE.MeshPhysicalMaterial({
         color: 0xddeeff, metalness: 0.05, roughness: 0.0,
         transmission: 0.88, opacity: 1, transparent: true, side: THREE.DoubleSide,
     });
-    const caseFrameMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4, metalness: 0.8 });
-
-    // Geometry cột khung — dùng chung 1 lần
-    const pillarGeo  = new THREE.BoxGeometry(0.1, CASE_H + 0.06, 0.1);
-    const rimBarGeo  = new THREE.BoxGeometry(0.1, 0.08, 0.1); // placeholder, kích thước set lúc vẽ
 
     function addDisplayUnit(cx, cz, cw, cd, wallSides = []) {
         const centerY = CASE_H / 2;
@@ -430,30 +425,7 @@ export function setupEnvironment(scene) {
         roof.position.set(cx, CASE_H, cz);
         scene.add(roof);
 
-        // Cột khung 4 góc
-        const pillarH = CASE_H + 0.06;
-        for (const [px, pz] of [
-            [cx - hw, cz - hd], [cx + hw, cz - hd],
-            [cx - hw, cz + hd], [cx + hw, cz + hd],
-        ]) {
-            const p = new THREE.Mesh(new THREE.BoxGeometry(0.1, pillarH, 0.1), caseFrameMat);
-            p.position.set(px, pillarH / 2, pz);
-            scene.add(p);
-        }
-
-        // Viền ngang trên đỉnh
-        for (const [vw, vd, vx, vz] of [
-            [cw + 0.1, 0.1,  cx,      cz - hd],
-            [cw + 0.1, 0.1,  cx,      cz + hd],
-            [0.1,  cd + 0.1, cx - hw, cz     ],
-            [0.1,  cd + 0.1, cx + hw, cz     ],
-        ]) {
-            const b = new THREE.Mesh(new THREE.BoxGeometry(vw, 0.08, vd), caseFrameMat);
-            b.position.set(vx, CASE_H + 0.04, vz);
-            scene.add(b);
-        }
-
-        // 1 SpotLight duy nhất mỗi lồng (bỏ fill light thừa)
+        // 1 SpotLight duy nhất mỗi lồng
         const sl = new THREE.SpotLight(0xfff4e0, 320);
         sl.position.set(cx, 13, cz);
         sl.angle    = Math.PI / 5;
@@ -468,24 +440,78 @@ export function setupEnvironment(scene) {
     // =====================================================
     // TẠO LỒNG KÍNH
     // =====================================================
-     addDisplayUnit(26.75, -26.5, 24.5, 5, ['back']);               // Lồng A 
-    addDisplayUnit(32.5, -8, 12, 5, ['right', 'front']);         // Lồng B (Xóa kính trước)
-    addDisplayUnit(33.0, -2, 12, 5, ['right', 'back']);          // Lồng C (Xóa kính sau để liền với B)
-    addDisplayUnit(36.5, 15.35, 5, 29.5, ['right', 'back']);
+    const A_CW = 16,  A_CX = 31.45, A_CZ = -26.5, A_CD = 5;
 
+    // Kéo dài Lồng D: Chiều dài Z chạy chính xác từ 0.5 đến 29.0
+    const D_CW = 5,   D_CX = 36.5,  D_CZ = 14.75, D_CD = 28.5;
+
+    // Lồng A: skip 'back' (z=-29.0)
+    addDisplayUnit(A_CX, A_CZ, A_CW, A_CD, ['back']);
+    // Lồng D: skip 'right' (x=39.0)
+    addDisplayUnit(D_CX, D_CZ, D_CW, D_CD, ['right']);
+
+    // =====================================================
+    // TƯỜNG BAO HỐC — dùng wallMat (tường thường, giống bên ngoài)
+    // =====================================================
+
+    // ── LỒNG A ──────────────────────────────────────────
+    // Tường lấp bên trái lồng A  (w=8.95, h=15, d=7, x=17.975, z=-26.5)
+    addWall(8.95, 15, 6, 17.975, -26.5);
+
+    // Tường trái bao hốc A  (w=1, h=15, d=5.5, x=22.95, z=-26.25)
+    addWall(1, 15, 5.5, 22.95, -26.25);
+
+    // Tường thường trên mặt kính trước A  (w=16, h=9, d=1, x=31.45, y=10.5, z=-24.0)
+    const topA = new THREE.Mesh(new THREE.BoxGeometry(16, 9, 1), wallMat);
+    topA.position.set(31.45, 10.5, -24.0);
+    topA.receiveShadow = true; scene.add(topA);
+    addBoxCollider(16, 9, 1, 31.45, 10.5, -24.0);
+
+    // Tấm tường ốp mặt sau hốc A  (w=17, h=15, d=0.15, x=31.45, y=7.5, z=-28.925)
+    const backA = new THREE.Mesh(new THREE.BoxGeometry(17, 15, 0.15), wallMat);
+    backA.position.set(31.45, 7.5, -28.925); backA.receiveShadow = true; scene.add(backA);
+
+    // Viền trần hốc A  (w=18, h=0.3, d=5.5, x=31.45, y=14.85, z=-26.25)
+    const ceilA = new THREE.Mesh(new THREE.BoxGeometry(18, 0.3, 5.5), wallMat);
+    ceilA.position.set(31.45, 14.85, -26.25); scene.add(ceilA);
+
+    // ── LỒNG D ──────────────────────────────────────────
+    // Tấm tường ốp mặt sau hốc D  (w=0.15, h=15, d=28.5, x=38.925, y=7.5, z=14.75)
+    const backD = new THREE.Mesh(new THREE.BoxGeometry(0.15, 15, 28.5), wallMat);
+    backD.position.set(38.925, 7.5, 14.75); backD.receiveShadow = true; scene.add(backD);
+
+    // Tường bịt đầu dưới hốc D  (w=7, h=15, d=1, x=36.5, y=7.5, z=0.0)
+    const botD = new THREE.Mesh(new THREE.BoxGeometry(7, 15, 1), wallMat);
+    botD.position.set(36.5, 7.5, 0.0);
+    botD.receiveShadow = true; scene.add(botD);
+    addBoxCollider(7, 15, 1, 36.5, 7.5, 0.0);
+
+    // Tường thường trên mặt kính D  (w=1, h=9, d=28.5, x=33.5, y=10.5, z=14.75)
+    const topFrontD = new THREE.Mesh(new THREE.BoxGeometry(1, 9, 28.5), wallMat);
+    topFrontD.position.set(33.5, 10.5, 14.75);
+    topFrontD.receiveShadow = true; scene.add(topFrontD);
+    addBoxCollider(1, 9, 28.5, 33.5, 10.5, 14.75);
+
+    // Viền trần hốc D  (w=6, h=0.3, d=29.5, x=36.5, y=14.85, z=14.25)
+    const ceilD = new THREE.Mesh(new THREE.BoxGeometry(6, 0.3, 29.5), wallMat);
+    ceilD.position.set(36.5, 14.85, 14.25); scene.add(ceilD);
+
+    // Tường lấp đầu trên hốc D  (w=7, h=15, d=1, x=36.5, y=7.5, z=29.5)
+    addWall(7, 15, 1, 36.5, 29.5);
+
+    // Tường lấp khoảng trống bên dưới lồng D (x=14→34, z=-5→0)
+    addWall(5, 15, 5, 35.5, -2.5);
 
     // =====================================================
     // TƯỜNG LỬNG BẢO VỆ
     // =====================================================
-    const LOW_WALL_H = 1.4;
-    const T          = 0.4;
 
-    addWall(T,     LOW_WALL_H, 12.5,  25.95,   -5.0  );  // Dọc: ôm mép trái lồng B & C
-    addWall(7.1,   LOW_WALL_H, T,     29.7,     1.05 );  // Ngang: nối tường 1 → 3
-    addWall(T,     LOW_WALL_H, 28.25, 33.45,   15.375);  // Dọc: ôm mép trái lồng D
-    addWall(12.85, LOW_WALL_H, T,     32.575, -11.05 );  // Ngang: bịt phía trên lồng B
-    addWall(25.5,  LOW_WALL_H, T,     26.25,  -23.45 );  // Ngang: phía trước lồng A
-    addWall(T,     LOW_WALL_H, 5.85,  13.7,   -26.575);  // Dọc: bịt mép trái lồng A
+    // Lồng A: ngang phía trước + dọc bờ trái
+    addWall(17.5, 1.4, 0.4, 31.45, -23.7);
+    addWall(0.4, 1.4, 5.5, 22.95, -26.25);
 
-    return { collidableWalls };
+    // Lồng D: dọc bờ trái
+    addWall(0.4, 1.4, 29.0, 33.20, 14.5);
+
+    return { collidableWalls }; 
 }
