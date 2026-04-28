@@ -138,6 +138,21 @@ function addArt(scene, loader, opts) {
 // DANH SÁCH TRANH
 // =====================================================
 const GALLERY_DATA = [
+    // --- Tranh treo trên vách gỗ lấp khoảng trống bên trái 2 lồng ---
+    { 
+        url: 'tranh/tranh8.jpg', w: 4, h: 5.5, 
+        x: 19, y: 4.0, z: -23.45, ry: 0, 
+        title: 'Tranh Vách Lồng A', 
+        desc: 'Bức tranh trang trí trên vách gỗ Lồng A.', 
+        frameStyle: 'wood' 
+    },
+    { 
+        url: 'tranh/tranh9.jpg', w: 3.5, h: 4.5, 
+        x: 32.95, y: 4.0, z: -2.0, ry: -Math.PI / 2, 
+        title: 'Tranh Vách Lồng D', 
+        desc: 'Bức tranh trang trí trên vách gỗ Lồng D.', 
+        frameStyle: 'gold' 
+    },
     // --- Tường phía sau (sảnh chính) ---
     { 
         url: 'tranh/tranh6.jpg',  w: 5, h: 7.5, x: 0, y: 5.5, z: -28.9, ry: 0, 

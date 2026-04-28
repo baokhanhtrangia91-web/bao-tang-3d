@@ -437,13 +437,13 @@ export function setupEnvironment(scene) {
         scene.add(sl, sl.target);
     }
 
-    // =====================================================
+  // =====================================================
     // TẠO LỒNG KÍNH
     // =====================================================
-    const A_CW = 16,  A_CX = 31.45, A_CZ = -26.5, A_CD = 5;
+    const A_CW = 16,  A_CX = 31.45, A_CZ = -26.5, A_CD = 5;
 
     // Kéo dài Lồng D: Chiều dài Z chạy chính xác từ 0.5 đến 29.0
-    const D_CW = 5,   D_CX = 36.5,  D_CZ = 14.75, D_CD = 28.5;
+    const D_CW = 5,   D_CX = 36.5,  D_CZ = 14.75, D_CD = 28.5;
 
     // Lồng A: skip 'back' (z=-29.0)
     addDisplayUnit(A_CX, A_CZ, A_CW, A_CD, ['back']);
@@ -451,52 +451,82 @@ export function setupEnvironment(scene) {
     addDisplayUnit(D_CX, D_CZ, D_CW, D_CD, ['right']);
 
     // =====================================================
-    // TƯỜNG BAO HỐC — dùng woodMat (ốp gỗ toàn bộ)
+    // HÀM HỖ TRỢ: XỬ LÝ VÂN GỖ ĐỒNG NHẤT
+    // =====================================================
+    function getUniformBox(w, h, d) {
+        const geo = new THREE.BoxGeometry(w, h, d);
+        const pos = geo.attributes.position;
+        const uv = geo.attributes.uv;
+        const nor = geo.attributes.normal;
+        
+        // Phóng to/thu nhỏ vân gỗ tại đây (thử thay đổi từ 0.1 đến 0.5 để xem kết quả)
+        const scale = 0.15; 
+        
+        for (let i = 0; i < uv.count; i++) {
+            let x = pos.getX(i);
+            let y = pos.getY(i);
+            let z = pos.getZ(i);
+            
+            let nx = Math.abs(nor.getX(i));
+            let ny = Math.abs(nor.getY(i));
+            
+            // Tính toán lại UV dựa trên kích thước thật ở không gian 3D
+            if (nx > 0.5) uv.setXY(i, z * scale, y * scale);
+            else if (ny > 0.5) uv.setXY(i, x * scale, z * scale);
+            else uv.setXY(i, x * scale, y * scale);
+        }
+        return geo;
+    }
+
+    // Tạo hàm addWoodWall riêng để sử dụng getUniformBox thay vì BoxGeometry mặc định
+    function addWoodWall(w, h, d, x, z) {
+        const wall = new THREE.Mesh(getUniformBox(w, h, d), woodMat);
+        wall.position.set(x, h / 2, z);
+        wall.receiveShadow = true;
+        scene.add(wall);
+        addBoxCollider(w, h, d, x, h / 2, z);
+    }
+
+    // =====================================================
+    // TƯỜNG BAO HỐC — Ốp gỗ toàn bộ với vân đồng nhất
     // =====================================================
 
     // ── LỒNG A ──────────────────────────────────────────
-    // Tường lấp bên trái lồng A  (w=8.95, h=15, d=7, x=17.975, z=-26.5)
-    addWall(8.95, 15, 6, 17.975, -26.5, woodMat);
+    // Tường lấp bên trái lồng A
+    addWoodWall(8.95, 15, 6, 17.975, -26.5);
 
-    // Tường trái bao hốc A  (w=1, h=15, d=5.5, x=22.95, z=-26.25)
-    addWall(1, 15, 5.5, 22.95, -26.25, woodMat);
+    // Tường trái bao hốc A
+    addWoodWall(1, 15, 5.5, 22.95, -26.25);
 
-    // Tường gỗ trên mặt kính trước A  (w=16, h=9, d=1, x=31.45, y=10.5, z=-24.0)
-    const topA = new THREE.Mesh(new THREE.BoxGeometry(16, 9, 1), woodMat);
+    // Tường gỗ trên mặt kính trước A
+    const topA = new THREE.Mesh(getUniformBox(16, 9, 1), woodMat);
     topA.position.set(31.45, 10.5, -24.0);
     topA.receiveShadow = true; scene.add(topA);
     addBoxCollider(16, 9, 1, 31.45, 10.5, -24.0);
 
-    // Viền trần hốc A  (w=18, h=0.3, d=5.5, x=31.45, y=14.85, z=-26.25)
-    const ceilA = new THREE.Mesh(new THREE.BoxGeometry(18, 0.3, 5.5), woodMat);
+    // Viền trần hốc A
+    const ceilA = new THREE.Mesh(getUniformBox(18, 0.3, 5.5), woodMat);
     ceilA.position.set(31.45, 14.85, -26.25); scene.add(ceilA);
 
     // ── LỒNG D ──────────────────────────────────────────
-
     // Tường bịt đầu dưới hốc D 
-    // (Đã sửa w=6, x=36.0 để nằm gọn gàng từ x=33.0 đến mép tường x=39.0)
-    const botD = new THREE.Mesh(new THREE.BoxGeometry(6, 15, 1), woodMat);
+    const botD = new THREE.Mesh(getUniformBox(6, 15, 1), woodMat);
     botD.position.set(36.0, 7.5, 0.0);
     botD.receiveShadow = true; scene.add(botD);
     addBoxCollider(6, 15, 1, 36.0, 7.5, 0.0);
 
-    // Tường gỗ trên mặt kính D (Giữ nguyên, tọa độ đã chuẩn)
-    const topFrontD = new THREE.Mesh(new THREE.BoxGeometry(1, 9, 28.5), woodMat);
+    // Tường gỗ trên mặt kính D
+    const topFrontD = new THREE.Mesh(getUniformBox(1, 9, 28.5), woodMat);
     topFrontD.position.set(33.5, 10.5, 14.75);
     topFrontD.receiveShadow = true; scene.add(topFrontD);
     addBoxCollider(1, 9, 28.5, 33.5, 10.5, 14.75);
 
     // Viền trần hốc D 
-    // (Đã sửa x=36.0 để không lẹm sang không gian bên ngoài bức tường phải)
-    const ceilD = new THREE.Mesh(new THREE.BoxGeometry(6, 0.3, 29.5), woodMat);
+    const ceilD = new THREE.Mesh(getUniformBox(6, 0.3, 29.5), woodMat);
     ceilD.position.set(36.0, 14.85, 14.25); scene.add(ceilD);
 
-    // ĐÃ XÓA: Tường lấp đầu trên hốc D (addWall tại z=29.5) 
-    // Lý do: Trùng 100% với tường bao chính của phòng gây hiện tượng nhấp nháy bề mặt.
-
     // Tường lấp khoảng trống bên dưới lồng D 
-    // (Đã sửa w=6, x=36.0 để lấp kín bề ngang 6 unit, không để lại khe hở 1 unit như trước)
-    addWall(6, 15, 5, 36.0, -2.5, woodMat);
+    addWoodWall(6, 15, 5, 36.0, -2.5);
 
     // =====================================================
     // TƯỜNG LỬNG BẢO VỆ (ỐP GỖ BÊN NGOÀI)
@@ -505,11 +535,11 @@ export function setupEnvironment(scene) {
     const T          = 0.4;
 
     // Lồng A: ngang phía trước + dọc bờ trái
-    addWall(17.5, LOW_WALL_H, T, 31.45, -23.7, woodMat);
-    addWall(T, LOW_WALL_H, 5.5, 22.95, -26.25, woodMat);
+    addWoodWall(17.5, LOW_WALL_H, T, 31.45, -23.7);
+    addWoodWall(T, LOW_WALL_H, 5.5, 22.95, -26.25);
 
     // Lồng D: dọc bờ trái
-    addWall(T, LOW_WALL_H, 29.0, 33.20, 14.5, woodMat);
+    addWoodWall(T, LOW_WALL_H, 29.0, 33.20, 14.5);
 
     return { collidableWalls };
 }
