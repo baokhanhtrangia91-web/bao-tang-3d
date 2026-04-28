@@ -142,32 +142,95 @@ export function setupEnvironment(scene) {
     // =====================================================
     // BỆ TRƯNG BÀY — share material
     // =====================================================
-    const goldMat  = new THREE.MeshStandardMaterial({ color: 0xc5a059, roughness: 0.3, metalness: 0.9 });
-    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf0ede8, roughness: 0.08, metalness: 0.15 });
+    // VẬT LIỆU BỤC — phong cách Tân Cổ Điển Ý (đá cẩm thạch trắng + viền đá xám)
+    // =====================================================
 
-    // Geometry bệ dùng chung — tái sử dụng qua clone mesh
+    // Đá cẩm thạch trắng Carrara
+    const marbleMat = new THREE.MeshStandardMaterial({
+        color: 0xf4f0eb, roughness: 0.18, metalness: 0.0,
+    });
+    // Gờ/viền đá xám nhạt
+    const moldingMat = new THREE.MeshStandardMaterial({
+        color: 0xd6d0c8, roughness: 0.28, metalness: 0.0,
+    });
+    // Đế chân — đá đậm hơn, tạo cảm giác nặng chắc
+    const plinthMat = new THREE.MeshStandardMaterial({
+        color: 0xe2ddd6, roughness: 0.35, metalness: 0.0,
+    });
+
+    // =====================================================
+    // createPedestal — Bục Tân Cổ Điển gồm 5 lớp:
+    //   1. Plinth  — đế chân vuông dày, hơi nhô ra
+    //   2. Base    — thân chính cao, đá cẩm thạch
+    //   3. Fascia  — dải đá ngang giữa (đường chỉ ngang)
+    //   4. Neck    — cổ thu nhỏ phía trên
+    //   5. Abacus  — bản phẳng trên cùng đỡ tượng
+    // =====================================================
     function createPedestal(cx, cz, width) {
         width = width || 7;
         const g = new THREE.Group();
 
-        const base = new THREE.Mesh(new THREE.BoxGeometry(width, 1.4, width), whiteMat);
-        base.position.set(0, 0.7, 0);
+        // 1. Plinth (đế chân)
+        const plinthW = width + 0.55;
+        const plinth  = new THREE.Mesh(new THREE.BoxGeometry(plinthW, 0.22, plinthW), plinthMat);
+        plinth.position.set(0, 0.11, 0);
+        plinth.castShadow = true; plinth.receiveShadow = true;
+        g.add(plinth);
+
+        // Gờ bevel mỏng dưới plinth
+        const plinthBevel = new THREE.Mesh(new THREE.BoxGeometry(plinthW + 0.12, 0.08, plinthW + 0.12), moldingMat);
+        plinthBevel.position.set(0, 0.04, 0);
+        plinthBevel.receiveShadow = true;
+        g.add(plinthBevel);
+
+        // 2. Base — thân chính đá cẩm thạch
+        const baseH = 0.90;
+        const base  = new THREE.Mesh(new THREE.BoxGeometry(width, baseH, width), marbleMat);
+        base.position.set(0, 0.22 + baseH / 2, 0);
         base.castShadow = true; base.receiveShadow = true;
         g.add(base);
 
-        const top = new THREE.Mesh(new THREE.BoxGeometry(width + 0.4, 0.2, width + 0.4), goldMat);
-        top.position.set(0, 1.5, 0);
-        top.castShadow = true; top.receiveShadow = true;
-        g.add(top);
+        // Gờ astragal dưới base
+        const astragalBot = new THREE.Mesh(new THREE.BoxGeometry(width + 0.14, 0.10, width + 0.14), moldingMat);
+        astragalBot.position.set(0, 0.22 + 0.05, 0);
+        astragalBot.receiveShadow = true;
+        g.add(astragalBot);
 
-        const bottom = new THREE.Mesh(new THREE.BoxGeometry(width + 0.4, 0.2, width + 0.4), goldMat);
-        bottom.position.set(0, 0.1, 0);
-        bottom.receiveShadow = true;
-        g.add(bottom);
+        // 3. Fascia — dải ngang giữa
+        const fasciaY = 0.22 + baseH;
+        const fascia  = new THREE.Mesh(new THREE.BoxGeometry(width + 0.08, 0.13, width + 0.08), moldingMat);
+        fascia.position.set(0, fasciaY + 0.065, 0);
+        fascia.castShadow = true; fascia.receiveShadow = true;
+        g.add(fascia);
+
+        // 4. Neck — cổ bục hơi nhỏ hơn
+        const neckW = width - 0.10;
+        const neckH = 0.45;
+        const neck  = new THREE.Mesh(new THREE.BoxGeometry(neckW, neckH, neckW), marbleMat);
+        neck.position.set(0, fasciaY + 0.13 + neckH / 2, 0);
+        neck.castShadow = true; neck.receiveShadow = true;
+        g.add(neck);
+
+        // Gờ cyma recta trên neck
+        const cymaY = fasciaY + 0.13 + neckH;
+        const cyma  = new THREE.Mesh(new THREE.BoxGeometry(width + 0.18, 0.12, width + 0.18), moldingMat);
+        cyma.position.set(0, cymaY + 0.06, 0);
+        cyma.castShadow = true; cyma.receiveShadow = true;
+        g.add(cyma);
+
+        // 5. Abacus — bản phẳng trên cùng đỡ tượng
+        const abacusY = cymaY + 0.12;
+        const abacus  = new THREE.Mesh(new THREE.BoxGeometry(width + 0.30, 0.10, width + 0.30), plinthMat);
+        abacus.position.set(0, abacusY + 0.05, 0);
+        abacus.castShadow = true; abacus.receiveShadow = true;
+        g.add(abacus);
 
         g.position.set(cx, 0, cz);
         scene.add(g);
-        addBoxCollider(width + 0.5, 5.0, width + 0.5, cx, 2.5, cz);
+
+        // Đỉnh bục ≈ abacusY + 0.10 ≈ 2.05 — collider bọc toàn bục
+        const totalH = abacusY + 0.10;
+        addBoxCollider(width + 0.60, totalH + 3.0, width + 0.60, cx, (totalH + 3.0) / 2, cz);
     }
 
     const statueZ      = -7;
@@ -189,9 +252,44 @@ export function setupEnvironment(scene) {
         sp.decay    = 2;
         sp.distance = 28;
         sp.castShadow = false;
-        sp.target.position.set(LEFT_X, 1.5, pz);
+        sp.target.position.set(LEFT_X, 2.5, pz);
         scene.add(sp, sp.target);
     }
+
+    // =====================================================
+    // TƯỢNG 3D PHÒNG TRÁI — 3 bục tại Z = -14, 0, 14
+    // Chỉnh: đường dẫn file, position.set(x, y, z), scale.setScalar(n), rotation.y
+    // =====================================================
+
+    // --- TƯỢNG BỤC 1 (Z = -14) ---
+    gltfLoader.load('model/david_by_michelangelo.glb', (gltf) => {
+        const model = gltf.scene;
+        model.position.set(LEFT_X - 1.5, 1.6, -26); // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
+        model.scale.setScalar(0.8);              // <-- chỉnh scale tại đây
+        model.rotation.y = 0;                  // <-- chỉnh góc xoay tại đây (Math.PI/2, Math.PI,...)
+        model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+        scene.add(model);
+    }, undefined, err => console.error('Lỗi tải tượng bục 1:', err));
+
+    // --- TƯỢNG BỤC 2 (Z = 0) ---
+    gltfLoader.load('model/pieta_a_3d_tribute_to_michelangelos_masterpiece.glb', (gltf) => {
+        const model = gltf.scene;
+        model.position.set(LEFT_X, 2.05, 0);   // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
+        model.scale.setScalar(2.5);              // <-- chỉnh scale tại đây
+        model.rotation.y = 105;                  // <-- chỉnh góc xoay tại đây
+        model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+        scene.add(model);
+    }, undefined, err => console.error('Lỗi tải tượng bục 2:', err));
+
+    // --- TƯỢNG BỤC 3 (Z = 14) ---
+    gltfLoader.load('model/moses_by_michelangelo.glb', (gltf) => {
+        const model = gltf.scene;
+        model.position.set(LEFT_X - 2.5, 1.5, 15);  // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
+        model.scale.setScalar(0.028);              // <-- chỉnh scale tại đây
+        model.rotation.y = 0;                  // <-- chỉnh góc xoay tại đây
+        model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+        scene.add(model);
+    }, undefined, err => console.error('Lỗi tải tượng bục 3:', err));
 
     // =====================================================
     // RÀO CHẮN VIP & MODEL TRUNG TÂM
@@ -259,7 +357,7 @@ export function setupEnvironment(scene) {
 
     gltfLoader.load('model/da_vinci_tank.glb', (gltf) => {
         const model = gltf.scene;
-        model.position.set(0, 1.3, statueZ);
+        model.position.set(0, 1.4, statueZ);
         model.scale.setScalar(80);
         model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
         scene.add(model);
@@ -493,7 +591,7 @@ export function setupEnvironment(scene) {
 
     // ── LỒNG A ──────────────────────────────────────────
     // Tường lấp bên trái lồng A
-    addWoodWall(8.95, 15, 6, 17.975, -26.5);
+    addWoodWall(8.95, 16, 6, 18.0, -26.5);
 
     // Tường trái bao hốc A
     addWoodWall(1, 15, 5.5, 22.95, -26.25);
@@ -535,7 +633,7 @@ export function setupEnvironment(scene) {
     const T          = 0.4;
 
     // Lồng A: ngang phía trước + dọc bờ trái
-    addWoodWall(17.5, LOW_WALL_H, T, 31.45, -23.7);
+    addWoodWall(16.2, LOW_WALL_H, T, 31.45, -23.7);
     addWoodWall(T, LOW_WALL_H, 5.5, 22.95, -26.25);
 
     // Lồng D: dọc bờ trái
