@@ -75,13 +75,13 @@ export function setupEnvironment(scene) {
         collidableWalls.push(collider);
     }
 
-    function addWall(w, h, d, x, z) {
-        const wall = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
-        wall.position.set(x, h / 2, z);
-        wall.receiveShadow = true;
-        scene.add(wall);
-        addBoxCollider(w, h, d, x, h / 2, z);
-    }
+    function addWall(w, h, d, x, z, customMat = wallMat) {
+        const wall = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), customMat);
+        wall.position.set(x, h / 2, z);
+        wall.receiveShadow = true;
+        scene.add(wall);
+        addBoxCollider(w, h, d, x, h / 2, z);
+    }
 
     function addArch(gapW, d, x, yBase, z, ry = 0) {
         const h = H - yBase;
@@ -438,80 +438,78 @@ export function setupEnvironment(scene) {
     }
 
     // =====================================================
-    // TẠO LỒNG KÍNH
-    // =====================================================
-    const A_CW = 16,  A_CX = 31.45, A_CZ = -26.5, A_CD = 5;
+    // TẠO LỒNG KÍNH
+    // =====================================================
+    const A_CW = 16,  A_CX = 31.45, A_CZ = -26.5, A_CD = 5;
 
-    // Kéo dài Lồng D: Chiều dài Z chạy chính xác từ 0.5 đến 29.0
-    const D_CW = 5,   D_CX = 36.5,  D_CZ = 14.75, D_CD = 28.5;
+    // Kéo dài Lồng D: Chiều dài Z chạy chính xác từ 0.5 đến 29.0
+    const D_CW = 5,   D_CX = 36.5,  D_CZ = 14.75, D_CD = 28.5;
 
-    // Lồng A: skip 'back' (z=-29.0)
-    addDisplayUnit(A_CX, A_CZ, A_CW, A_CD, ['back']);
-    // Lồng D: skip 'right' (x=39.0)
-    addDisplayUnit(D_CX, D_CZ, D_CW, D_CD, ['right']);
+    // Lồng A: skip 'back' (z=-29.0)
+    addDisplayUnit(A_CX, A_CZ, A_CW, A_CD, ['back']);
+    // Lồng D: skip 'right' (x=39.0)
+    addDisplayUnit(D_CX, D_CZ, D_CW, D_CD, ['right']);
 
-    // =====================================================
-    // TƯỜNG BAO HỐC — dùng wallMat (tường thường, giống bên ngoài)
-    // =====================================================
+    // =====================================================
+    // TƯỜNG BAO HỐC — dùng woodMat (ốp gỗ toàn bộ)
+    // =====================================================
 
-    // ── LỒNG A ──────────────────────────────────────────
-    // Tường lấp bên trái lồng A  (w=8.95, h=15, d=7, x=17.975, z=-26.5)
-    addWall(8.95, 15, 6, 17.975, -26.5);
+    // ── LỒNG A ──────────────────────────────────────────
+    // Tường lấp bên trái lồng A  (w=8.95, h=15, d=7, x=17.975, z=-26.5)
+    addWall(8.95, 15, 6, 17.975, -26.5, woodMat);
 
-    // Tường trái bao hốc A  (w=1, h=15, d=5.5, x=22.95, z=-26.25)
-    addWall(1, 15, 5.5, 22.95, -26.25);
+    // Tường trái bao hốc A  (w=1, h=15, d=5.5, x=22.95, z=-26.25)
+    addWall(1, 15, 5.5, 22.95, -26.25, woodMat);
 
-    // Tường thường trên mặt kính trước A  (w=16, h=9, d=1, x=31.45, y=10.5, z=-24.0)
-    const topA = new THREE.Mesh(new THREE.BoxGeometry(16, 9, 1), wallMat);
-    topA.position.set(31.45, 10.5, -24.0);
-    topA.receiveShadow = true; scene.add(topA);
-    addBoxCollider(16, 9, 1, 31.45, 10.5, -24.0);
+    // Tường gỗ trên mặt kính trước A  (w=16, h=9, d=1, x=31.45, y=10.5, z=-24.0)
+    const topA = new THREE.Mesh(new THREE.BoxGeometry(16, 9, 1), woodMat);
+    topA.position.set(31.45, 10.5, -24.0);
+    topA.receiveShadow = true; scene.add(topA);
+    addBoxCollider(16, 9, 1, 31.45, 10.5, -24.0);
 
-    // Tấm tường ốp mặt sau hốc A  (w=17, h=15, d=0.15, x=31.45, y=7.5, z=-28.925)
-    const backA = new THREE.Mesh(new THREE.BoxGeometry(17, 15, 0.15), wallMat);
-    backA.position.set(31.45, 7.5, -28.925); backA.receiveShadow = true; scene.add(backA);
+    // Viền trần hốc A  (w=18, h=0.3, d=5.5, x=31.45, y=14.85, z=-26.25)
+    const ceilA = new THREE.Mesh(new THREE.BoxGeometry(18, 0.3, 5.5), woodMat);
+    ceilA.position.set(31.45, 14.85, -26.25); scene.add(ceilA);
 
-    // Viền trần hốc A  (w=18, h=0.3, d=5.5, x=31.45, y=14.85, z=-26.25)
-    const ceilA = new THREE.Mesh(new THREE.BoxGeometry(18, 0.3, 5.5), wallMat);
-    ceilA.position.set(31.45, 14.85, -26.25); scene.add(ceilA);
+    // ── LỒNG D ──────────────────────────────────────────
 
-    // ── LỒNG D ──────────────────────────────────────────
-    // Tấm tường ốp mặt sau hốc D  (w=0.15, h=15, d=28.5, x=38.925, y=7.5, z=14.75)
-    const backD = new THREE.Mesh(new THREE.BoxGeometry(0.15, 15, 28.5), wallMat);
-    backD.position.set(38.925, 7.5, 14.75); backD.receiveShadow = true; scene.add(backD);
+    // Tường bịt đầu dưới hốc D 
+    // (Đã sửa w=6, x=36.0 để nằm gọn gàng từ x=33.0 đến mép tường x=39.0)
+    const botD = new THREE.Mesh(new THREE.BoxGeometry(6, 15, 1), woodMat);
+    botD.position.set(36.0, 7.5, 0.0);
+    botD.receiveShadow = true; scene.add(botD);
+    addBoxCollider(6, 15, 1, 36.0, 7.5, 0.0);
 
-    // Tường bịt đầu dưới hốc D  (w=7, h=15, d=1, x=36.5, y=7.5, z=0.0)
-    const botD = new THREE.Mesh(new THREE.BoxGeometry(7, 15, 1), wallMat);
-    botD.position.set(36.5, 7.5, 0.0);
-    botD.receiveShadow = true; scene.add(botD);
-    addBoxCollider(7, 15, 1, 36.5, 7.5, 0.0);
+    // Tường gỗ trên mặt kính D (Giữ nguyên, tọa độ đã chuẩn)
+    const topFrontD = new THREE.Mesh(new THREE.BoxGeometry(1, 9, 28.5), woodMat);
+    topFrontD.position.set(33.5, 10.5, 14.75);
+    topFrontD.receiveShadow = true; scene.add(topFrontD);
+    addBoxCollider(1, 9, 28.5, 33.5, 10.5, 14.75);
 
-    // Tường thường trên mặt kính D  (w=1, h=9, d=28.5, x=33.5, y=10.5, z=14.75)
-    const topFrontD = new THREE.Mesh(new THREE.BoxGeometry(1, 9, 28.5), wallMat);
-    topFrontD.position.set(33.5, 10.5, 14.75);
-    topFrontD.receiveShadow = true; scene.add(topFrontD);
-    addBoxCollider(1, 9, 28.5, 33.5, 10.5, 14.75);
+    // Viền trần hốc D 
+    // (Đã sửa x=36.0 để không lẹm sang không gian bên ngoài bức tường phải)
+    const ceilD = new THREE.Mesh(new THREE.BoxGeometry(6, 0.3, 29.5), woodMat);
+    ceilD.position.set(36.0, 14.85, 14.25); scene.add(ceilD);
 
-    // Viền trần hốc D  (w=6, h=0.3, d=29.5, x=36.5, y=14.85, z=14.25)
-    const ceilD = new THREE.Mesh(new THREE.BoxGeometry(6, 0.3, 29.5), wallMat);
-    ceilD.position.set(36.5, 14.85, 14.25); scene.add(ceilD);
+    // ĐÃ XÓA: Tường lấp đầu trên hốc D (addWall tại z=29.5) 
+    // Lý do: Trùng 100% với tường bao chính của phòng gây hiện tượng nhấp nháy bề mặt.
 
-    // Tường lấp đầu trên hốc D  (w=7, h=15, d=1, x=36.5, y=7.5, z=29.5)
-    addWall(7, 15, 1, 36.5, 29.5);
+    // Tường lấp khoảng trống bên dưới lồng D 
+    // (Đã sửa w=6, x=36.0 để lấp kín bề ngang 6 unit, không để lại khe hở 1 unit như trước)
+    addWall(6, 15, 5, 36.0, -2.5, woodMat);
 
-    // Tường lấp khoảng trống bên dưới lồng D (x=14→34, z=-5→0)
-    addWall(5, 15, 5, 35.5, -2.5);
+    // =====================================================
+    // TƯỜNG LỬNG BẢO VỆ (ỐP GỖ BÊN NGOÀI)
+    // =====================================================
+    const LOW_WALL_H = 1.4;
+    const T          = 0.4;
 
-    // =====================================================
-    // TƯỜNG LỬNG BẢO VỆ
-    // =====================================================
+    // Lồng A: ngang phía trước + dọc bờ trái
+    addWall(17.5, LOW_WALL_H, T, 31.45, -23.7, woodMat);
+    addWall(T, LOW_WALL_H, 5.5, 22.95, -26.25, woodMat);
 
-    // Lồng A: ngang phía trước + dọc bờ trái
-    addWall(17.5, 1.4, 0.4, 31.45, -23.7);
-    addWall(0.4, 1.4, 5.5, 22.95, -26.25);
+    // Lồng D: dọc bờ trái
+    addWall(T, LOW_WALL_H, 29.0, 33.20, 14.5, woodMat);
 
-    // Lồng D: dọc bờ trái
-    addWall(0.4, 1.4, 29.0, 33.20, 14.5);
-
-    return { collidableWalls }; 
+    return { collidableWalls };
 }
