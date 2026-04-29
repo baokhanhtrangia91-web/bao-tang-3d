@@ -182,50 +182,115 @@ export const ARTWORKS_INFO = [
     },
     {
         id: '17',
+        title: 'Self Portrait',
+        artist: 'Vincent van Gogh',
+        year: '1888',
+        desc: 'Thể hiện tình bạn rạn nứt giữa ông và Paul Gauguin.',
+        detail: 'Mô tả một vật thể mà còn gợi lên sự trống trải và nỗi cô đơn cùng cực.',
+        frameStyle: 'gold',
+        imageUrl: 'tranh/Vincent van Gogh/17.jpg',
+        audioUrl: 'audio/Vincent van Gogh/17.mp3'
+    },
+
+    // ================= 3D MODELS =================
+    {
+        id: 'm1',
         type: 'model',
         title: 'David',
-        desc: 'Michelangelo',
-        detail: 'Kiệt tác của Michelangelo, cao hơn 5m, tạc từ đá cẩm thạch.Tượng khắc họa David trước trận chiến với Goliath, với ánh mắt tập trung và cơ thể căng tràn sức mạnh',
+        artist: 'Michelangelo',
+        desc: 'Tượng cẩm thạch huyền thoại.', // Đã sửa key
+        detail: 'Kiệt tác của Michelangelo, cao hơn 5m, tạc từ đá cẩm thạch. Tượng khắc họa David trước trận chiến với Goliath, với ánh mắt tập trung và cơ thể căng tràn sức mạnh.',
         modelUrl: 'model/David_statue.glb',
         audioUrl: 'audio/Michelangelo/david_statue.mp3'
     },
     {
-        id: '18',
+        id: 'm2',
         type: 'model',
         title: 'Pietà',
-        desc: 'Michelangelo',
-        detail: 'Tác phẩm khắc họa Đức Mẹ ôm thi thể Chúa Giêsu',
+        artist: 'Michelangelo',
+        desc: 'Đức Mẹ ôm thi thể Chúa Giêsu.',
+        detail: 'Tác phẩm khắc họa Đức Mẹ ôm thi thể Chúa Giêsu với sự mềm mại đáng kinh ngạc của đá cẩm thạch.',
         modelUrl: 'model/pieta.glb',
         audioUrl: 'audio/Michelangelo/pietà_model.mp3'
     },
     {
-        id: '19',
+        id: 'm3',
         type: 'model',
         title: 'Sleeping cupid',
-        desc: 'Michelangelo',
+        artist: 'Michelangelo',
+        desc: 'Thần Cupid đang ngủ.',
         detail: 'Tác phẩm đầu tay của Michelangelo (khoảng 1496), khắc họa thần Cupid đang ngủ với hình thể mềm mại, mang ảnh hưởng nghệ thuật Hy Lạp–La Mã cổ đại.',
-        modelUrl: '',
+        modelUrl: 'model/placeholder.glb', // Đã thêm placeholder để tránh lỗi crash GLTFLoader. Nếu chưa có model, hãy comment nguyên object ID 19 này lại.
         audioUrl: 'audio/Michelangelo/sleepingcupid.mp3'
     },
     {
-        id: '20',
+        id: 'm4',
         type: 'model',
-        title: 'Đêm đầy sao',
-        desc: 'Vincent van Gogh',
-        modelUrl: 'model/Đêm đầy sao.glb',
+        title: 'Đêm đầy sao (3D)',
+        artist: 'Vincent van Gogh',
+        desc: 'Trải nghiệm 3D của tác phẩm Đêm đầy sao.',
+        detail: 'Mô hình 3D tái hiện lại những nét cọ cuộn xoáy đặc trưng của Van Gogh.',
+        modelUrl: 'model/VanGOGH.glb',
+        audioUrl: null
     },
     {
-        id: '21',
+        id: 'm5',
         type: 'model',
-        title: 'Quán café về đêm 1888',
-        desc: 'Vincent van Gogh',
+        title: 'Quán café về đêm 1888 (3D)',
+        artist: 'Vincent van Gogh',
+        desc: 'Không gian 3D của quán Cafe.',
+        detail: 'Trải nghiệm bước vào không gian quán cafe ban đêm tại Arles.',
         modelUrl: 'model/Quán café về đêm 1888.glb',
+        audioUrl: null
     },
     {
-        id: '22',
+        id: 'm6',
         type: 'model',
-        title: 'Wheatfield with Cypresses',
-        desc: 'Vincent van Gogh',
+        title: 'Wheatfield with Cypresses (3D)',
+        artist: 'Vincent van Gogh',
+        desc: 'Mô hình 3D của cánh đồng lúa.',
+        detail: 'Tái hiện không gian cánh đồng lúa mì và cây bách dưới dạng 3D.',
         modelUrl: 'model/Wheatfield with Cypresses.glb',
+        audioUrl: null
+    },
+    {
+        id: 'm7',
+        type: 'model',
+        title: 'Sun flowers (3D)',
+        artist: 'Vincent van Gogh',
+        desc: 'Mô hình 3D của hoa hướng dương.',
+        detail: 'Tái hiện hoa hướng dương của tranh van Gogh 3D.',
+        modelUrl: 'model/sunflower.glb',
+        audioUrl: null
+    },
+    {
+        id: 'm8',
+        type: 'model',
+        title: 'Chair (3D)',
+        artist: 'Vincent van Gogh',
+        desc: 'Ghế van Gogh vẽ.',
+        detail: 'Tái hiện ghế được vẽ trong tranh van Gogh 3D.',
+        modelUrl: 'model/chairvangogh.glb',
+        audioUrl: null
+    },
+    {
+        id: 'm9',
+        type: 'model',
+        title: 'oil lamp (3D)',
+        artist: 'Vincent van Gogh',
+        desc: 'đèn dầu vẽ.',
+        detail: 'Tái hiện đèn dầu được vẽ trong tranh van Gogh 3D.',
+        modelUrl: 'model/oil lamp.glb',
+        audioUrl: null
+    },
+    {
+        id: 'm10',
+        type: 'model',
+        title: 'old boot (3D)',
+        artist: 'Vincent van Gogh',
+        desc: 'ủng vẽ.',
+        detail: 'Tái hiện ủng được vẽ trong tranh van Gogh 3D.',
+        modelUrl: 'model/oldboot.glb',
+        audioUrl: null
     },
 ];
