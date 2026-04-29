@@ -4,19 +4,19 @@ import { interactableObjects } from './artworks.js';
 const INTERACTION_DIST = 6;
 
 export function setupUI() {
-    const artUI    = document.getElementById('art-description');
+    const artUI = document.getElementById('art-description');
     const artTitle = document.getElementById('art-title');
-    const artText  = document.getElementById('art-text');
+    const artText = document.getElementById('art-text');
     const artAudio = document.getElementById('art-audio');
-    if (artAudio) artAudio.volume = 0.3;
+    if (artAudio) artAudio.volume = 1;
 
     const subtitleContainer = document.getElementById('subtitle-container');
-    const subtitleText      = document.getElementById('subtitle-text');
+    const subtitleText = document.getElementById('subtitle-text');
 
     let currentSubtitles = null;
-    let hoveredObj       = null;
-    let isInfoShowing    = false;
-    let playingAudioUrl  = '';
+    let hoveredObj = null;
+    let isInfoShowing = false;
+    let playingAudioUrl = '';
 
     // Tooltip nhắc tương tác
     const promptUI = (() => {
@@ -39,9 +39,9 @@ export function setupUI() {
         artAudio.addEventListener('timeupdate', () => {
             if (!currentSubtitles || !currentSubtitles.length) return;
             const time = artAudio.currentTime;
-            const sub  = currentSubtitles.find(s => time >= s.start && time <= s.end);
+            const sub = currentSubtitles.find(s => time >= s.start && time <= s.end);
             if (sub) {
-                subtitleText.innerHTML  = sub.text;
+                subtitleText.innerHTML = sub.text;
                 subtitleText.style.display = 'inline-block';
             } else {
                 subtitleText.style.display = 'none';
@@ -50,7 +50,7 @@ export function setupUI() {
 
         artAudio.addEventListener('ended', () => {
             subtitleContainer.style.display = 'none';
-            playingAudioUrl  = '';
+            playingAudioUrl = '';
             currentSubtitles = null;
         });
     }
@@ -58,7 +58,7 @@ export function setupUI() {
     function stopAudio() {
         if (artAudio) { artAudio.pause(); artAudio.currentTime = 0; }
         if (subtitleContainer) subtitleContainer.style.display = 'none';
-        playingAudioUrl  = '';
+        playingAudioUrl = '';
         currentSubtitles = null;
     }
 
@@ -66,20 +66,20 @@ export function setupUI() {
         if (!audioData?.url) return;
         if (playingAudioUrl === audioData.url && !artAudio.paused) { stopAudio(); return; }
         stopAudio();
-        playingAudioUrl      = audioData.url;
-        artAudio.src         = audioData.url;
-        currentSubtitles     = audioData.subtitles || [];
+        playingAudioUrl = audioData.url;
+        artAudio.src = audioData.url;
+        currentSubtitles = audioData.subtitles || [];
         subtitleContainer.style.display = 'block';
-        subtitleText.style.display      = 'none';
+        subtitleText.style.display = 'none';
         artAudio.play().catch(e => console.log(e));
     }
 
     function showArtInfo(title, desc) {
         if (!artUI) return;
         if (artTitle) artTitle.textContent = title;
-        if (artText)  artText.textContent  = desc;
+        if (artText) artText.textContent = desc;
         artUI.style.display = 'block';
-        isInfoShowing       = true;
+        isInfoShowing = true;
         promptUI.style.display = 'none';
     }
 
@@ -93,14 +93,14 @@ export function setupUI() {
         if (e.code !== 'KeyE' || !hoveredObj) return;
         if (hoveredObj.userData.isArt) {
             isInfoShowing ? (hideArtInfo(), promptUI.style.display = 'block')
-                          : showArtInfo(hoveredObj.userData.title, hoveredObj.userData.desc);
+                : showArtInfo(hoveredObj.userData.title, hoveredObj.userData.desc);
         } else if (hoveredObj.userData.isAudioButton) {
             toggleAudioPlayback(hoveredObj.userData.audioData);
         }
     });
 
     // Raycaster — reuse vector
-    const raycaster    = new THREE.Raycaster();
+    const raycaster = new THREE.Raycaster();
     const screenCenter = new THREE.Vector2(0, 0);
 
     function updateInteraction(camera) {
@@ -114,15 +114,15 @@ export function setupUI() {
                 hideArtInfo();
                 hoveredObj = obj;
                 if (obj.userData.isArt) {
-                    promptUI.innerHTML     = 'Nhấn <b>[E]</b> để đọc thông tin';
+                    promptUI.innerHTML = 'Nhấn <b>[E]</b> để đọc thông tin';
                     promptUI.style.display = 'block';
                 } else if (obj.userData.isAudioButton) {
-                    promptUI.innerHTML     = 'Nhấn <b>[E]</b> để Bật/Tắt Thuyết Minh';
+                    promptUI.innerHTML = 'Nhấn <b>[E]</b> để Bật/Tắt Thuyết Minh';
                     promptUI.style.display = 'block';
                 }
             }
         } else if (hoveredObj !== null) {
-            hoveredObj             = null;
+            hoveredObj = null;
             promptUI.style.display = 'none';
             hideArtInfo();
         }
