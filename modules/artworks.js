@@ -171,6 +171,7 @@ function addArt(scene, loader, opts) {
 // CHỈ CHỨA TỌA ĐỘ
 // =====================================================
 const ARTWORKS_POSITION = [
+    // add arts
     { id: '6', w: 5, h: 7.5, x: 0, y: 5.5, z: -28.9, ry: 0 },
     { id: '7', w: 20.7, h: 11.64, x: 13.4, y: 6.9, z: -7.5, ry: -Math.PI / 2 },
     { id: '8', w: 4, h: 6, x: -13.4, y: 6, z: -23, ry: Math.PI / 2 },
@@ -182,7 +183,7 @@ const ARTWORKS_POSITION = [
     { id: '5', w: 9, h: 7, x: -14.6, y: 7, z: 2, ry: -Math.PI / 2 },
 
     { id: '9', w: 6, h: 6.5, x: -13.4, y: 6, z: -8.5, ry: Math.PI / 2 },
-    { id: '10', w: 5, h: 7, x: -12.4, y: 6, z: 5, ry: Math.PI / 2 },
+    { id: '10', w: 5, h: 7, x: -13.4, y: 6, z: 5, ry: Math.PI / 2 },
 
     { id: '11', w: 7, h: 6, x: 38.9, y: 6, z: -13.5, ry: -Math.PI / 2 },
     { id: '12', w: 6, h: 6, x: 14.6, y: 6, z: -14, ry: Math.PI / 2 },
@@ -192,11 +193,22 @@ const ARTWORKS_POSITION = [
     { id: '15', w: 6, h: 7, x: 19, y: 5, z: -23.4, ry: 0 },
     { id: '16', w: 6, h: 6, x: 32.9, y: 10, z: 24.3, ry: -Math.PI / 2 },
     { id: '17', w: 6, h: 6, x: 32.9, y: 10, z: 15, ry: -Math.PI / 2 },
+    // add models
     { id: 'm4', x: 36.7, y: 2.5, z: 24.3, ry: Math.PI * 2 / 3, scale: 6.8 },
     { id: 'm9', x: 36.7, y: 1, z: 3, ry: 0, scale: 1.5 },
     { id: 'm8', x: 36.9, y: 0, z: 15, ry: -Math.PI / 2, scale: 2.4 },
-    { id: 'm7', x: 33, y: 3, z: -26.5, ry: 0, scale: 2.5 },
+    { id: 'm7', x: 31, y: 3, z: -26.5, ry: 0, scale: 2.5 },
     { id: 'm10', x: 36.7, y: 1, z: 8.7, ry: 0, scale: 0.7 },
+    // add trees
+    { id: 'tree', x: -12, y: 0, z: 13, ry: 0, scale: 2 },
+    { id: 'tree', x: -12, y: 0, z: 16.5, ry: 0, scale: 1.5 },
+    { id: 'tree', x: 12, y: 0, z: 16.5, ry: 0, scale: 1.5 },
+    { id: 'tree', x: -12, y: 0, z: 27.5, ry: 0, scale: 1.5 },
+    { id: 'tree', x: 12, y: 0, z: 27.5, ry: 0, scale: 1.5 },
+    { id: 'tree', x: 16.5, y: 0, z: 27.5, ry: 0, scale: 1.5 },
+    { id: 'tree', x: 15.5, y: 0, z: 13.5, ry: 0, scale: 1.5 },
+    { id: 'tree', x: -38, y: 0, z: 12.2, ry: 0, scale: 1.5 },
+    { id: 'tree', x: -15.6, y: 0, z: 12.2, ry: 0, scale: 1.5 },
 ];
 
 // =====================================================

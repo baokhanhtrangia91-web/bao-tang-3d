@@ -293,4 +293,9 @@ export const ARTWORKS_INFO = [
         modelUrl: 'model/oldboot.glb',
         audioUrl: null
     },
+    {
+        id: 'tree',
+        type: 'model',
+        modelUrl: 'model/tree.glb',
+    }
 ];

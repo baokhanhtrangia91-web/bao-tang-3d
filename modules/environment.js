@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 
 export function setupEnvironment(scene) {
     const W = 80;
@@ -43,8 +44,8 @@ export function setupEnvironment(scene) {
     // =====================================================
     // ÁNH SÁNG MÔI TRƯỜNG — chỉ 2 light nền, không shadow
     // =====================================================
-    scene.add(new THREE.AmbientLight(0xd4a373, 0.8));
-    const hemiLight = new THREE.HemisphereLight(0xc29b70, 0x1a120b, 0.4);
+    scene.add(new THREE.AmbientLight(0xd4a373, 1));
+    const hemiLight = new THREE.HemisphereLight(0xc29b70, 0x1a120b, 0.2);
     hemiLight.position.set(0, H, 0);
     scene.add(hemiLight);
 
@@ -56,7 +57,7 @@ export function setupEnvironment(scene) {
         new THREE.MeshStandardMaterial({ map: floorTex, color: 0xcccccc, roughness: 0.6, metalness: 0.05 })
     );
     floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
+    floor.receiveShadow = false;
     scene.add(floor);
 
     const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(W, D), ceilingMat);
@@ -78,7 +79,7 @@ export function setupEnvironment(scene) {
     function addWall(w, h, d, x, z, customMat = wallMat) {
         const wall = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), customMat);
         wall.position.set(x, h / 2, z);
-        wall.receiveShadow = true;
+        wall.receiveShadow = false;
         scene.add(wall);
         addBoxCollider(w, h, d, x, h / 2, z);
     }
@@ -98,7 +99,7 @@ export function setupEnvironment(scene) {
         const archMesh = new THREE.Mesh(archGeo, wallMat);
         archMesh.position.set(x, yBase + h / 2, z);
         archMesh.rotation.y = ry;
-        archMesh.receiveShadow = true;
+        archMesh.receiveShadow = false;
         scene.add(archMesh);
 
         const trimW = 0.4, innerOffset = 0.05, trimDepth = d + 0.15;
@@ -174,7 +175,7 @@ export function setupEnvironment(scene) {
         const plinthW = width + 0.55;
         const plinth = new THREE.Mesh(new THREE.BoxGeometry(plinthW, 0.22, plinthW), plinthMat);
         plinth.position.set(0, 0.11, 0);
-        plinth.castShadow = true; plinth.receiveShadow = true;
+        plinth.castShadow = false; plinth.receiveShadow = true;
         g.add(plinth);
 
         // Gờ bevel mỏng dưới plinth
@@ -187,7 +188,7 @@ export function setupEnvironment(scene) {
         const baseH = 0.90;
         const base = new THREE.Mesh(new THREE.BoxGeometry(width, baseH, width), marbleMat);
         base.position.set(0, 0.22 + baseH / 2, 0);
-        base.castShadow = true; base.receiveShadow = true;
+        base.castShadow = false; base.receiveShadow = true;
         g.add(base);
 
         // Gờ astragal dưới base
@@ -200,7 +201,7 @@ export function setupEnvironment(scene) {
         const fasciaY = 0.22 + baseH;
         const fascia = new THREE.Mesh(new THREE.BoxGeometry(width + 0.08, 0.13, width + 0.08), moldingMat);
         fascia.position.set(0, fasciaY + 0.065, 0);
-        fascia.castShadow = true; fascia.receiveShadow = true;
+        fascia.castShadow = false; fascia.receiveShadow = true;
         g.add(fascia);
 
         // 4. Neck — cổ bục hơi nhỏ hơn
@@ -208,21 +209,21 @@ export function setupEnvironment(scene) {
         const neckH = 0.45;
         const neck = new THREE.Mesh(new THREE.BoxGeometry(neckW, neckH, neckW), marbleMat);
         neck.position.set(0, fasciaY + 0.13 + neckH / 2, 0);
-        neck.castShadow = true; neck.receiveShadow = true;
+        neck.castShadow = false; neck.receiveShadow = true;
         g.add(neck);
 
         // Gờ cyma recta trên neck
         const cymaY = fasciaY + 0.13 + neckH;
         const cyma = new THREE.Mesh(new THREE.BoxGeometry(width + 0.18, 0.12, width + 0.18), moldingMat);
         cyma.position.set(0, cymaY + 0.06, 0);
-        cyma.castShadow = true; cyma.receiveShadow = true;
+        cyma.castShadow = false; cyma.receiveShadow = true;
         g.add(cyma);
 
         // 5. Abacus — bản phẳng trên cùng đỡ tượng
         const abacusY = cymaY + 0.12;
         const abacus = new THREE.Mesh(new THREE.BoxGeometry(width + 0.30, 0.10, width + 0.30), plinthMat);
         abacus.position.set(0, abacusY + 0.05, 0);
-        abacus.castShadow = true; abacus.receiveShadow = true;
+        abacus.castShadow = false; abacus.receiveShadow = true;
         g.add(abacus);
 
         g.position.set(cx, 0, cz);
@@ -245,7 +246,7 @@ export function setupEnvironment(scene) {
     // ĐÈN RỌI BỆ PHÒNG TRÁI — castShadow: false, dùng vòng lặp
     // =====================================================
     for (const pz of leftZPositions) {
-        const sp = new THREE.SpotLight(0xfff0dd, 280);
+        const sp = new THREE.SpotLight(0xfff0dd, 120);
         sp.position.set(LEFT_X + 5, 13, pz + 3);
         sp.angle = Math.PI / 6;
         sp.penumbra = 0.4;
@@ -260,34 +261,38 @@ export function setupEnvironment(scene) {
     // TƯỢNG 3D PHÒNG TRÁI — 3 bục tại Z = -14, 0, 14
     // Chỉnh: đường dẫn file, position.set(x, y, z), scale.setScalar(n), rotation.y
     // =====================================================
+    const dracoLoader = new DRACOLoader();
 
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+    dracoLoader.setDecoderConfig({ type: 'js' });
+    gltfLoader.setDRACOLoader(dracoLoader)
     // --- TƯỢNG BỤC 1 (Z = -14) ---
-    gltfLoader.load('model/david_by_michelangelo.glb', (gltf) => {
+    gltfLoader.load('model/David_statue.glb', (gltf) => {
         const model = gltf.scene;
-        model.position.set(LEFT_X - 1.5, 1.6, -26); // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
-        model.scale.setScalar(0.8);              // <-- chỉnh scale tại đây
+        model.position.set(LEFT_X, 1.8, -14); // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
+        model.scale.setScalar(1);              // <-- chỉnh scale tại đây
         model.rotation.y = 0;                  // <-- chỉnh góc xoay tại đây (Math.PI/2, Math.PI,...)
-        model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+        model.traverse(n => { if (n.isMesh) { n.castShadow = false; n.receiveShadow = false; } });
         scene.add(model);
     }, undefined, err => console.error('Lỗi tải tượng bục 1:', err));
 
     // --- TƯỢNG BỤC 2 (Z = 0) ---
-    gltfLoader.load('model/pieta_a_3d_tribute_to_michelangelos_masterpiece.glb', (gltf) => {
+    gltfLoader.load('model/pieta.glb', (gltf) => {
         const model = gltf.scene;
         model.position.set(LEFT_X, 2.05, 0);   // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
-        model.scale.setScalar(2.5);              // <-- chỉnh scale tại đây
-        model.rotation.y = 105;                  // <-- chỉnh góc xoay tại đây
-        model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+        model.scale.setScalar(6);              // <-- chỉnh scale tại đây
+        model.rotation.y = 0;                  // <-- chỉnh góc xoay tại đây
+        model.traverse(n => { if (n.isMesh) { n.castShadow = false; n.receiveShadow = false; } });
         scene.add(model);
     }, undefined, err => console.error('Lỗi tải tượng bục 2:', err));
 
     // --- TƯỢNG BỤC 3 (Z = 14) ---
-    gltfLoader.load('model/moses_by_michelangelo.glb', (gltf) => {
+    gltfLoader.load('model/statue1.glb', (gltf) => {
         const model = gltf.scene;
-        model.position.set(LEFT_X - 2.5, 1.5, 15);  // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
-        model.scale.setScalar(0.028);              // <-- chỉnh scale tại đây
+        model.position.set(LEFT_X, 2.5, 14);  // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
+        model.scale.setScalar(0.3);              // <-- chỉnh scale tại đây
         model.rotation.y = 0;                  // <-- chỉnh góc xoay tại đây
-        model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+        model.traverse(n => { if (n.isMesh) { n.castShadow = false; n.receiveShadow = false; } });
         scene.add(model);
     }, undefined, err => console.error('Lỗi tải tượng bục 3:', err));
 
@@ -327,25 +332,25 @@ export function setupEnvironment(scene) {
             const c = wrap.clone();
             c.position.set(x, 0, z);
             c.rotation.y = ry;
-            c.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+            c.traverse(n => { if (n.isMesh) { n.castShadow = false; n.receiveShadow = false; } });
             scene.add(c);
         }
     }, undefined, err => console.error('Lỗi tải rào chắn VIP:', err));
 
     // Đèn tượng trung tâm — chỉ 1 SpotLight có shadow
-    const statueLight = new THREE.SpotLight(0xfff0dd, 400);
+    const statueLight = new THREE.SpotLight(0xfff0dd, 300);
     statueLight.position.set(0, 13.5, statueZ);
     statueLight.angle = Math.PI / 5;
     statueLight.penumbra = 0.4;
     statueLight.decay = 2;
     statueLight.distance = 55;
-    statueLight.castShadow = true;
-    statueLight.shadow.mapSize.set(512, 512); // giảm từ 1024 → 512 để nhẹ GPU
+    statueLight.castShadow = false;
+    statueLight.shadow.mapSize.set(128, 128); // giảm từ 1024 → 512 để nhẹ GPU
     statueLight.shadow.bias = -0.001;
     statueLight.target.position.set(0, 1.5, statueZ);
     scene.add(statueLight, statueLight.target);
 
-    const statueFill = new THREE.SpotLight(0xc8deff, 60);
+    const statueFill = new THREE.SpotLight(0xc8deff, 25);
     statueFill.position.set(0, 12, statueZ);
     statueFill.angle = Math.PI / 4;
     statueFill.penumbra = 0.8;
@@ -355,11 +360,11 @@ export function setupEnvironment(scene) {
     statueFill.target.position.set(0, 1.5, statueZ);
     scene.add(statueFill, statueFill.target);
 
-    gltfLoader.load('model/da_vinci_tank.glb', (gltf) => {
+    gltfLoader.load('model/davidtank.glb', (gltf) => {
         const model = gltf.scene;
         model.position.set(0, 1.4, statueZ);
         model.scale.setScalar(80);
-        model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+        model.traverse(n => { if (n.isMesh) { n.castShadow = false; n.receiveShadow = false; } });
         scene.add(model);
     }, undefined, err => console.error('Lỗi tải model:', err));
 
@@ -374,7 +379,7 @@ export function setupEnvironment(scene) {
 
     // Đặt PointLight trước (không phụ thuộc GLTF)
     for (const [x, z] of chandelierPositions) {
-        const pl = new THREE.PointLight(0xffeacc, 110, 32);
+        const pl = new THREE.PointLight(0xffeacc, 70, 32);
         pl.position.set(x, H - 4.5, z);
         pl.castShadow = false;
         scene.add(pl);
@@ -384,7 +389,7 @@ export function setupEnvironment(scene) {
     gltfLoader.load('model/chandelier (2).glb', (gltf) => {
         const base = gltf.scene;
         base.scale.setScalar(25);
-        base.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+        base.traverse(n => { if (n.isMesh) { n.castShadow = false; n.receiveShadow = false; } });
 
         for (const [x, z] of chandelierPositions) {
             const c = base.clone();
@@ -409,9 +414,9 @@ export function setupEnvironment(scene) {
     function addBench(x, z, ry = 0) {
         const g = new THREE.Group();
         const seat = new THREE.Mesh(seatGeo, lightWoodMat);
-        seat.position.set(0, 0.9, 0); seat.receiveShadow = true; g.add(seat);
+        seat.position.set(0, 0.9, 0); seat.receiveShadow = false; g.add(seat);
         const cushion = new THREE.Mesh(cushionGeo, cushionMat);
-        cushion.position.set(0, 1.0, 0); cushion.receiveShadow = true; g.add(cushion);
+        cushion.position.set(0, 1.0, 0); cushion.receiveShadow = false; g.add(cushion);
         for (const [lx, lz] of [[-1.15, -0.3], [1.15, -0.3], [-1.15, 0.3], [1.15, 0.3]]) {
             const leg = new THREE.Mesh(legGeo, metalMat);
             leg.position.set(lx, 0.45, lz); g.add(leg);
@@ -425,6 +430,7 @@ export function setupEnvironment(scene) {
     }
     addBench(-8, 14, 0);
     addBench(12.6, 10, Math.PI / 2);
+    addBench(12.6, 8, Math.PI / 2);
     addBench(-38.4, 0, Math.PI / 2);
     addBench(15.1, -2, -Math.PI / 2);
     addBench(-38.4, 8, Math.PI / 2);
@@ -440,43 +446,6 @@ export function setupEnvironment(scene) {
     const shadeGeo = new THREE.CylinderGeometry(0.28, 0.18, 0.35, 12, 1, true);
     const bulbGeo = new THREE.SphereGeometry(0.07, 6, 6);
 
-    function addFloorLamp(x, z) {
-        const g = new THREE.Group();
-
-        // 1. Khởi tạo thân đèn và set vị trí đúng chuẩn Three.js
-        const pole = new THREE.Mesh(poleGeo, metalMat);
-        pole.position.set(0, 1.1, 0);
-        g.add(pole);
-
-        // Các phần còn lại giữ nguyên hoàn toàn
-        const base = new THREE.Mesh(baseGeo, metalMat);
-        base.position.set(0, 0.03, 0);
-        base.receiveShadow = true;
-        g.add(base);
-
-        const shade = new THREE.Mesh(shadeGeo, shadeMat);
-        shade.position.set(0, 2.38, 0);
-        g.add(shade);
-
-        const lampLight = new THREE.PointLight(0xffe8a0, 20, 8, 2);
-        lampLight.position.set(0, 2.2, 0);
-        g.add(lampLight);
-
-        const bulb = new THREE.Mesh(bulbGeo, new THREE.MeshBasicMaterial({ color: 0xffe8a0 }));
-        bulb.position.set(0, 2.2, 0);
-        g.add(bulb);
-
-        g.position.set(x, 0, z);
-        scene.add(g);
-
-    }
-    addFloorLamp(-38.2, 28.2);
-    addFloorLamp(-15.3, 28.2);
-    addFloorLamp(15.3, -20);
-    addFloorLamp(-5, 24); addFloorLamp(5, 24);
-    addFloorLamp(-38.2, -28.2);
-    addFloorLamp(-15.3, -28.2);
-    addFloorLamp(-15.3, -6.5);
     // Cột — share geometry & material
     const colMat = new THREE.MeshStandardMaterial({ color: 0xf0ede8, roughness: 0.3, metalness: 0.05 });
     const shaftGeo = new THREE.CylinderGeometry(0.35, 0.38, H - 0.5, 12); // 16 → 12
@@ -486,7 +455,7 @@ export function setupEnvironment(scene) {
     function addColumn(x, z) {
         const g = new THREE.Group();
         const shaft = new THREE.Mesh(shaftGeo, colMat);
-        shaft.position.set(0, (H - 0.5) / 2, 0); shaft.receiveShadow = true; g.add(shaft);
+        shaft.position.set(0, (H - 0.5) / 2, 0); shaft.receiveShadow = false; g.add(shaft);
         const capital = new THREE.Mesh(capitalGeo, colMat);
         capital.position.set(0, H - 0.45, 0); g.add(capital);
         const base = new THREE.Mesh(colBaseGeo, colMat);
@@ -495,7 +464,7 @@ export function setupEnvironment(scene) {
         scene.add(g);
         addBoxCollider(0.9, H, 0.9, x, H / 2, z);
     }
-    addColumn(-5.0, 16.0); addColumn(5.0, 16.0);
+    addColumn(-4.5, 16.0); addColumn(4.5, 16.0);
 
     // =====================================================
     // LỒNG KÍNH — dùng chung glassMat
