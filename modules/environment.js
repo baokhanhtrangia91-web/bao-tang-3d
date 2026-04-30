@@ -175,33 +175,33 @@ export function setupEnvironment(scene) {
         const plinthW = width + 0.55;
         const plinth = new THREE.Mesh(new THREE.BoxGeometry(plinthW, 0.22, plinthW), plinthMat);
         plinth.position.set(0, 0.11, 0);
-        plinth.castShadow = false; plinth.receiveShadow = true;
+        plinth.castShadow = false; plinth.receiveShadow = false;
         g.add(plinth);
 
         // Gờ bevel mỏng dưới plinth
         const plinthBevel = new THREE.Mesh(new THREE.BoxGeometry(plinthW + 0.12, 0.08, plinthW + 0.12), moldingMat);
         plinthBevel.position.set(0, 0.04, 0);
-        plinthBevel.receiveShadow = true;
+        plinthBevel.receiveShadow = false;
         g.add(plinthBevel);
 
         // 2. Base — thân chính đá cẩm thạch
         const baseH = 0.90;
         const base = new THREE.Mesh(new THREE.BoxGeometry(width, baseH, width), marbleMat);
         base.position.set(0, 0.22 + baseH / 2, 0);
-        base.castShadow = false; base.receiveShadow = true;
+        base.castShadow = false; base.receiveShadow = false;
         g.add(base);
 
         // Gờ astragal dưới base
         const astragalBot = new THREE.Mesh(new THREE.BoxGeometry(width + 0.14, 0.10, width + 0.14), moldingMat);
         astragalBot.position.set(0, 0.22 + 0.05, 0);
-        astragalBot.receiveShadow = true;
+        astragalBot.receiveShadow = false;
         g.add(astragalBot);
 
         // 3. Fascia — dải ngang giữa
         const fasciaY = 0.22 + baseH;
         const fascia = new THREE.Mesh(new THREE.BoxGeometry(width + 0.08, 0.13, width + 0.08), moldingMat);
         fascia.position.set(0, fasciaY + 0.065, 0);
-        fascia.castShadow = false; fascia.receiveShadow = true;
+        fascia.castShadow = false; fascia.receiveShadow = false;
         g.add(fascia);
 
         // 4. Neck — cổ bục hơi nhỏ hơn
@@ -209,21 +209,21 @@ export function setupEnvironment(scene) {
         const neckH = 0.45;
         const neck = new THREE.Mesh(new THREE.BoxGeometry(neckW, neckH, neckW), marbleMat);
         neck.position.set(0, fasciaY + 0.13 + neckH / 2, 0);
-        neck.castShadow = false; neck.receiveShadow = true;
+        neck.castShadow = false; neck.receiveShadow = false;
         g.add(neck);
 
         // Gờ cyma recta trên neck
         const cymaY = fasciaY + 0.13 + neckH;
         const cyma = new THREE.Mesh(new THREE.BoxGeometry(width + 0.18, 0.12, width + 0.18), moldingMat);
         cyma.position.set(0, cymaY + 0.06, 0);
-        cyma.castShadow = false; cyma.receiveShadow = true;
+        cyma.castShadow = false; cyma.receiveShadow = false;
         g.add(cyma);
 
         // 5. Abacus — bản phẳng trên cùng đỡ tượng
         const abacusY = cymaY + 0.12;
         const abacus = new THREE.Mesh(new THREE.BoxGeometry(width + 0.30, 0.10, width + 0.30), plinthMat);
         abacus.position.set(0, abacusY + 0.05, 0);
-        abacus.castShadow = false; abacus.receiveShadow = true;
+        abacus.castShadow = false; abacus.receiveShadow = false;
         g.add(abacus);
 
         g.position.set(cx, 0, cz);
@@ -558,7 +558,7 @@ export function setupEnvironment(scene) {
     function addWoodWall(w, h, d, x, z) {
         const wall = new THREE.Mesh(getUniformBox(w, h, d), woodMat);
         wall.position.set(x, h / 2, z);
-        wall.receiveShadow = true;
+        wall.receiveShadow = false;
         scene.add(wall);
         addBoxCollider(w, h, d, x, h / 2, z);
     }
@@ -577,7 +577,7 @@ export function setupEnvironment(scene) {
     // Tường gỗ trên mặt kính trước A
     const topA = new THREE.Mesh(getUniformBox(16, 9, 1), woodMat);
     topA.position.set(31.45, 10.5, -24.0);
-    topA.receiveShadow = true; scene.add(topA);
+    topA.receiveShadow = false; scene.add(topA);
     addBoxCollider(16, 9, 1, 31.45, 10.5, -24.0);
 
     // Viền trần hốc A
@@ -588,13 +588,13 @@ export function setupEnvironment(scene) {
     // Tường bịt đầu dưới hốc D 
     const botD = new THREE.Mesh(getUniformBox(6, 15, 1), woodMat);
     botD.position.set(36.0, 7.5, 0.0);
-    botD.receiveShadow = true; scene.add(botD);
+    botD.receiveShadow = false; scene.add(botD);
     addBoxCollider(6, 15, 1, 36.0, 7.5, 0.0);
 
     // Tường gỗ trên mặt kính D
     const topFrontD = new THREE.Mesh(getUniformBox(1, 9, 28.5), woodMat);
     topFrontD.position.set(33.5, 10.5, 14.75);
-    topFrontD.receiveShadow = true; scene.add(topFrontD);
+    topFrontD.receiveShadow = false; scene.add(topFrontD);
     addBoxCollider(1, 9, 28.5, 33.5, 10.5, 14.75);
 
     // Viền trần hốc D 
