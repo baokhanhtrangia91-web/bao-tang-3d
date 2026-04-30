@@ -200,10 +200,8 @@ const ARTWORKS_POSITION = [
     { id: 'm7', x: 31, y: 3, z: -26.5, ry: 0, scale: 2.5 },
     { id: 'm10', x: 36.7, y: 1, z: 8.7, ry: 0, scale: 0.7 },
     // add trees
-
     { id: 'tree', x: -12, y: 0, z: 16.5, ry: 0, scale: 1.5 },
     { id: 'tree', x: 12, y: 0, z: 16.5, ry: 0, scale: 1.5 },
-
 ];
 
 // =====================================================
@@ -229,13 +227,17 @@ const GALLERY_DATA = ARTWORKS_POSITION.map(pos => {
 }).filter(Boolean);
 
 // =====================================================
-// LOAD
+// BẢNG THÔNG TIN
+// =====================================================
 const INFO_BOARDS = [
     { url: 'model/bang.jpg', w: 6, h: 8.4, x: -25.5, y: 4.35, z: 28.5, ry: Math.PI },
     { url: 'model/z7754718409982_fa3b56a56702c325f8c0a95f4d907868.jpg', w: 6, h: 8.4, x: 23.5, y: 4.35, z: 28.5, ry: Math.PI },
     { url: 'model/bang.jpg', w: 6, h: 8.4, x: 10.25, y: 4.35, z: 14.2, ry: Math.PI },
     { url: 'model/thông báo.jpg', w: 4, h: 6.4, x: 33, y: 3.5, z: -2, ry: -Math.PI / 2 },
 ];
+
+// =====================================================
+// LOAD
 // =====================================================
 export function loadArtworks(scene) {
     const loader = new THREE.TextureLoader();
@@ -244,46 +246,41 @@ export function loadArtworks(scene) {
 
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
     dracoLoader.setDecoderConfig({ type: 'js' });
-    gltfLoader.setDRACOLoader(dracoLoader)
+    gltfLoader.setDRACOLoader(dracoLoader);
 
+    // ================= BẢNG THÔNG TIN =================
+    for (const board of INFO_BOARDS) {
+        addArt(scene, loader, {
+            ...board,
+            title: 'Thông Tin', desc: 'Khu vực trưng bày chính.',
+            frameDepth: 0.6, frameStyle: 'dark', isInfoBoard: true,
+        });
+    }
+
+    // ================= TRANH & MODEL =================
     for (const item of GALLERY_DATA) {
         if (!item) continue;
 
         // ================= MODEL 3D =================
         if (item.artInfo?.type === 'model') {
-
             gltfLoader.load(item.artInfo.modelUrl, (gltf) => {
-
                 const model = gltf.scene;
-
                 model.position.set(item.x, item.y, item.z);
-
                 model.rotation.y = item.ry || 0;
-
                 model.scale.setScalar(item.scale || 1);
-
                 model.traverse((n) => {
                     if (n.isMesh) {
                         n.castShadow = true;
                         n.receiveShadow = true;
                     }
                 });
-
                 scene.add(model);
-
             }, undefined, (err) => {
                 console.error('Lỗi load model:', err);
             });
-
             continue;
         }
-        for (const board of INFO_BOARDS) {
-            addArt(scene, loader, {
-                ...board,
-                title: 'Thông Tin', desc: 'Khu vực trưng bày chính.',
-                frameDepth: 0.6, frameStyle: 'dark', isInfoBoard: true,
-            });
-        }
+
         // ================= TRANH =================
         addArt(scene, loader, item);
     }
