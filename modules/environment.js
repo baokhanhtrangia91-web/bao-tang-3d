@@ -54,7 +54,7 @@ export function setupEnvironment(scene) {
     // =====================================================
     const floor = new THREE.Mesh(
         new THREE.PlaneGeometry(W, D),
-        new THREE.MeshStandardMaterial({ map: floorTex, color: 0xcccccc, roughness: 0.6, metalness: 0.05 })
+        new THREE.MeshStandardMaterial({ map: floorTex, color: 0xffffff, roughness: 0.6, metalness: 0.05 })
     );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = false;
