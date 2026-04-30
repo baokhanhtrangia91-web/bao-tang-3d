@@ -227,6 +227,7 @@ const INFO_BOARDS = [
     { url: 'model/bang.jpg', w: 6, h: 8.4, x: -25.5, y: 4.35, z: 28.5, ry: Math.PI },
     { url: 'model/z7754718409982_fa3b56a56702c325f8c0a95f4d907868.jpg', w: 6, h: 8.4, x: 23.5, y: 4.35, z: 28.5, ry: Math.PI },
     { url: 'model/bang.jpg', w: 6, h: 8.4, x: 10.25, y: 4.35, z: 14.2, ry: Math.PI },
+    { url: 'model/thông báo.jpg', w: 4, h: 6.4, x: 33, y: 3.5, z: -2, ry: -Math.PI / 2 },
 ];
 // =====================================================
 export function loadArtworks(scene) {
