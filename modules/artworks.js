@@ -200,15 +200,10 @@ const ARTWORKS_POSITION = [
     { id: 'm7', x: 31, y: 3, z: -26.5, ry: 0, scale: 2.5 },
     { id: 'm10', x: 36.7, y: 1, z: 8.7, ry: 0, scale: 0.7 },
     // add trees
-    { id: 'tree', x: -12, y: 0, z: 13, ry: 0, scale: 2 },
+
     { id: 'tree', x: -12, y: 0, z: 16.5, ry: 0, scale: 1.5 },
     { id: 'tree', x: 12, y: 0, z: 16.5, ry: 0, scale: 1.5 },
-    { id: 'tree', x: -12, y: 0, z: 27.5, ry: 0, scale: 1.5 },
-    { id: 'tree', x: 12, y: 0, z: 27.5, ry: 0, scale: 1.5 },
-    { id: 'tree', x: 16.5, y: 0, z: 27.5, ry: 0, scale: 1.5 },
-    { id: 'tree', x: 15.5, y: 0, z: 13.5, ry: 0, scale: 1.5 },
-    { id: 'tree', x: -38, y: 0, z: 12.2, ry: 0, scale: 1.5 },
-    { id: 'tree', x: -15.6, y: 0, z: 12.2, ry: 0, scale: 1.5 },
+
 ];
 
 // =====================================================
