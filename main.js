@@ -7,6 +7,7 @@ import { setupUI } from './modules/ui.js';
 import { setupCoordinates } from './modules/coordinates.js';
 import { setupMinimap } from './modules/minimap.js';
 import { setupScreenshot } from './modules/screenshot.js';
+import { setupAudio } from './modules/audioManager.js';
 
 // =====================================================
 // SCENE
@@ -18,74 +19,31 @@ const { renderMinimap } = setupMinimap(scene, renderer, camera);
 setupScreenshot(renderer, scene, camera);
 loadArtworks(scene);
 
+// controls
 const { controls, update: updateControls } = setupControls(camera, renderer, collidableWalls);
+
+// UI + coords
 const { update: updateCoords } = setupCoordinates(camera);
 const { updateInteraction } = setupUI();
+
+//  AUDIO (tách riêng)
+const audio = setupAudio(camera);
 
 const clock = new THREE.Clock();
 
 
 // =====================================================
-// 🎵 BACKGROUND MUSIC
 // =====================================================
-const listener = new THREE.AudioListener();
-camera.add(listener);
 
-const bgMusic = new THREE.Audio(listener);
-const audioLoader = new THREE.AudioLoader();
-
-let musicReady = false;
-let userWantsMusic = false; // 🔥 KEY FIX
-
-audioLoader.load(
-    'audio/0sound effects/music.mp3',
-    (buffer) => {
-        bgMusic.setBuffer(buffer);
-        bgMusic.setLoop(true);
-        bgMusic.setVolume(0.25);
-        musicReady = true;
-
-        // 🔥 nếu user đã bấm start trước đó → auto play ngay
-        if (userWantsMusic && !bgMusic.isPlaying) {
-            bgMusic.play();
-        }
-    },
-    undefined,
-    (err) => console.error('Lỗi load nhạc:', err)
-);
-
-function playMusic() {
-    userWantsMusic = true; // 🔥 nhớ rằng user muốn nghe
-
-    if (musicReady && !bgMusic.isPlaying) {
-        bgMusic.play();
-    }
-}
-
-function pauseMusic() {
-    userWantsMusic = false;
-
-    if (bgMusic.isPlaying) {
-        bgMusic.pause();
-    }
-}
-
-
-// =====================================================
-// 🎯 START BUTTON (QUAN TRỌNG NHẤT)
-// =====================================================
+// click "KHÁM PHÁ NGAY"
 const startBtn = document.getElementById('start-btn');
-
 startBtn?.addEventListener('click', () => {
-    playMusic(); // gọi trực tiếp từ user click
+    audio.play(); //  phát nhạc ngay từ user click
 });
 
-
-// =====================================================
-// ESC → pause
-// =====================================================
+// ESC (unlock chuột)
 controls.addEventListener('unlock', () => {
-    pauseMusic();
+    audio.pause(); //  pause nhạc
 });
 
 
