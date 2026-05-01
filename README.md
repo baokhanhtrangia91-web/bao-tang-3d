@@ -78,7 +78,7 @@ Trải nghiệm tham quan bảo tàng nghệ thuật thế giới ngay trên tr�
 ```bash
 # 1. Clone project
 git clone <repo-url>
-cd bao-tang-3d-khang
+cd bao-tang-3d
 
 # 2. Cài dependencies
 npm install
