@@ -12,7 +12,7 @@ export function setupAudio(camera) {
     let userWantsMusic = false;
 
     loader.load(
-        'audio/0sound effects/nhac.mp3', // đổi nhạc ở đây
+        '/audio/0sound effects/nhac.mp3', // đổi nhạc ở đây
         (buffer) => {
             bgMusic.setBuffer(buffer);
             bgMusic.setLoop(true);

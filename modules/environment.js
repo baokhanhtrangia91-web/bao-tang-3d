@@ -18,33 +18,33 @@ export function setupEnvironment(scene) {
     // =====================================================
     // TEXTURES — tải 1 lần, dùng lại
     // =====================================================
-    const floorTex = loader.load('model/go2.jpg');
+    const floorTex = loader.load('/model/go2.jpg');
     floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
     floorTex.repeat.set(32, 24);
     floorTex.colorSpace = THREE.SRGBColorSpace;
 
-    const wallTex = loader.load('model/tuong.jpg');
+    const wallTex = loader.load('/model/tuong.jpg');
     wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
     wallTex.repeat.set(8, 2);
     wallTex.colorSpace = THREE.SRGBColorSpace;
-    const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, color: 0xFFDFC4, roughness: 0.85, metalness: 0.0 });
+    const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, color: 0xFFE4B5, roughness: 0.85, metalness: 0.0 });
 
-    const ceilingTex = loader.load('model/trần gỗ.jpg');
+    const ceilingTex = loader.load('/model/trần gỗ.jpg');
     ceilingTex.wrapS = ceilingTex.wrapT = THREE.RepeatWrapping;
     ceilingTex.repeat.set(32, 24);
     ceilingTex.colorSpace = THREE.SRGBColorSpace;
-    const ceilingMat = new THREE.MeshStandardMaterial({ map: ceilingTex, color: 0xfff8f0, roughness: 0.8 });
+    const ceilingMat = new THREE.MeshStandardMaterial({ map: ceilingTex, color: 0xffffff, roughness: 0.8 });
 
     // woodMat dùng lại texture trần — clone UV repeat riêng
     const woodTex = ceilingTex.clone();
     woodTex.needsUpdate = true;
     woodTex.repeat.set(2, 2);
-    const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, color: 0xe0d5c0, roughness: 0.5 });
+    const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, color: 0xffffff, roughness: 0.5 });
 
     // =====================================================
     // ÁNH SÁNG MÔI TRƯỜNG — chỉ 2 light nền, không shadow
     // =====================================================
-    scene.add(new THREE.AmbientLight(0xd4a373, 1));
+    scene.add(new THREE.AmbientLight(0xd4a373, 2));
     const hemiLight = new THREE.HemisphereLight(0xc29b70, 0x1a120b, 0.2);
     hemiLight.position.set(0, H, 0);
     scene.add(hemiLight);
@@ -267,9 +267,9 @@ export function setupEnvironment(scene) {
     dracoLoader.setDecoderConfig({ type: 'js' });
     gltfLoader.setDRACOLoader(dracoLoader)
     // --- TƯỢNG BỤC 1 (Z = -14) ---
-    gltfLoader.load('model/David_statue.glb', (gltf) => {
+    gltfLoader.load('/model/David_statue.glb', (gltf) => {
         const model = gltf.scene;
-        model.position.set(LEFT_X, 1.8, -14); // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
+        model.position.set(LEFT_X, 1.7, -14); // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
         model.scale.setScalar(1);              // <-- chỉnh scale tại đây
         model.rotation.y = 0;                  // <-- chỉnh góc xoay tại đây (Math.PI/2, Math.PI,...)
         model.traverse(n => { if (n.isMesh) { n.castShadow = false; n.receiveShadow = false; } });
@@ -277,9 +277,9 @@ export function setupEnvironment(scene) {
     }, undefined, err => console.error('Lỗi tải tượng bục 1:', err));
 
     // --- TƯỢNG BỤC 2 (Z = 0) ---
-    gltfLoader.load('model/pieta.glb', (gltf) => {
+    gltfLoader.load('/model/pieta.glb', (gltf) => {
         const model = gltf.scene;
-        model.position.set(LEFT_X, 2.05, 0);   // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
+        model.position.set(LEFT_X, 1.95, 0);   // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
         model.scale.setScalar(6);              // <-- chỉnh scale tại đây
         model.rotation.y = 0;                  // <-- chỉnh góc xoay tại đây
         model.traverse(n => { if (n.isMesh) { n.castShadow = false; n.receiveShadow = false; } });
@@ -287,9 +287,9 @@ export function setupEnvironment(scene) {
     }, undefined, err => console.error('Lỗi tải tượng bục 2:', err));
 
     // --- TƯỢNG BỤC 3 (Z = 14) ---
-    gltfLoader.load('model/statue1.glb', (gltf) => {
+    gltfLoader.load('/model/statue1.glb', (gltf) => {
         const model = gltf.scene;
-        model.position.set(LEFT_X, 2.5, 14);  // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
+        model.position.set(LEFT_X, 2.4, 14);  // x=bục trái, y=đỉnh bục mới (2.05), z=vị trí bục
         model.scale.setScalar(0.3);              // <-- chỉnh scale tại đây
         model.rotation.y = 0;                  // <-- chỉnh góc xoay tại đây
         model.traverse(n => { if (n.isMesh) { n.castShadow = false; n.receiveShadow = false; } });
@@ -308,34 +308,6 @@ export function setupEnvironment(scene) {
     addBoxCollider(0.3, ropeWallH, barrierSize, -barrierOffset, ropeWallH / 2, statueZ);
     addBoxCollider(0.3, ropeWallH, barrierSize, barrierOffset, ropeWallH / 2, statueZ);
 
-    // Load rào VIP 1 lần → clone 4 bản
-    gltfLoader.load('model/vip_rope_barrier.glb', (gltf) => {
-        const raw = gltf.scene;
-        const box = new THREE.Box3().setFromObject(raw);
-        const sf = 2.8 / box.getSize(new THREE.Vector3()).y;
-        raw.scale.setScalar(sf);
-
-        const newBox = new THREE.Box3().setFromObject(raw);
-        const newCenter = newBox.getCenter(new THREE.Vector3());
-        raw.position.set(-newCenter.x, -newBox.min.y, -newCenter.z);
-
-        const wrap = new THREE.Group();
-        wrap.add(raw);
-
-        const placements = [
-            [0, statueZ + barrierOffset, 0],
-            [0, statueZ - barrierOffset, Math.PI],
-            [-barrierOffset, statueZ, Math.PI / 2],
-            [barrierOffset, statueZ, -Math.PI / 2],
-        ];
-        for (const [x, z, ry] of placements) {
-            const c = wrap.clone();
-            c.position.set(x, 0, z);
-            c.rotation.y = ry;
-            c.traverse(n => { if (n.isMesh) { n.castShadow = false; n.receiveShadow = false; } });
-            scene.add(c);
-        }
-    }, undefined, err => console.error('Lỗi tải rào chắn VIP:', err));
 
     // Đèn tượng trung tâm — chỉ 1 SpotLight có shadow
     const statueLight = new THREE.SpotLight(0xfff0dd, 300);
@@ -360,7 +332,7 @@ export function setupEnvironment(scene) {
     statueFill.target.position.set(0, 1.5, statueZ);
     scene.add(statueFill, statueFill.target);
 
-    gltfLoader.load('model/davidtank.glb', (gltf) => {
+    gltfLoader.load('/model/davidtank.glb', (gltf) => {
         const model = gltf.scene;
         model.position.set(0, 1.4, statueZ);
         model.scale.setScalar(80);
@@ -386,7 +358,7 @@ export function setupEnvironment(scene) {
     }
 
     // Load model 1 lần → clone
-    gltfLoader.load('model/chandelier (2).glb', (gltf) => {
+    gltfLoader.load('/model/chandelier (2).glb', (gltf) => {
         const base = gltf.scene;
         base.scale.setScalar(25);
         base.traverse(n => { if (n.isMesh) { n.castShadow = false; n.receiveShadow = false; } });
