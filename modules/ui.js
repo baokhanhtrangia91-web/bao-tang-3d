@@ -11,12 +11,8 @@ export function setupUI() {
     const artTitle = document.getElementById('art-title');
     const artText  = document.getElementById('art-text');
     const artAudio = document.getElementById('art-audio');
-<<<<<<< Updated upstream
-    if (artAudio) artAudio.volume = 0.3;
-=======
 
     if (artAudio) artAudio.volume = 1;
->>>>>>> Stashed changes
 
     const subtitleContainer = document.getElementById('subtitle-container');
     const subtitleText      = document.getElementById('subtitle-text');
@@ -90,22 +86,14 @@ export function setupUI() {
             const time = artAudio.currentTime;
             const sub  = currentSubtitles.find(s => time >= s.start && time <= s.end);
             if (sub) {
-<<<<<<< Updated upstream
-                subtitleText.innerHTML  = sub.text;
-=======
                 subtitleText.innerHTML    = sub.text;
->>>>>>> Stashed changes
                 subtitleText.style.display = 'inline-block';
             } else {
                 subtitleText.style.display = 'none';
             }
         });
         artAudio.addEventListener('ended', () => {
-<<<<<<< Updated upstream
-            subtitleContainer.style.display = 'none';
-=======
             if (subtitleContainer) subtitleContainer.style.display = 'none';
->>>>>>> Stashed changes
             playingAudioUrl  = '';
             currentSubtitles = null;
         });
@@ -122,21 +110,12 @@ export function setupUI() {
         if (!audioData?.url) return;
         if (playingAudioUrl === audioData.url && !artAudio.paused) { stopAudio(); return; }
         stopAudio();
-<<<<<<< Updated upstream
-        playingAudioUrl      = audioData.url;
-        artAudio.src         = audioData.url;
-        currentSubtitles     = audioData.subtitles || [];
-        subtitleContainer.style.display = 'block';
-        subtitleText.style.display      = 'none';
-        artAudio.play().catch(e => console.log(e));
-=======
         playingAudioUrl  = audioData.url;
         artAudio.src     = audioData.url;
         currentSubtitles = audioData.subtitles || [];
         if (subtitleContainer) subtitleContainer.style.display = 'block';
         if (subtitleText)      subtitleText.style.display      = 'none';
         artAudio.play().catch(e => console.log('Autoplay bị chặn:', e));
->>>>>>> Stashed changes
     }
 
     // ── Show / Hide Panel với animation ───────────────
@@ -144,10 +123,6 @@ export function setupUI() {
         if (!artUI) return;
         if (artTitle) artTitle.textContent = title;
         if (artText)  artText.textContent  = desc;
-<<<<<<< Updated upstream
-        artUI.style.display = 'block';
-        isInfoShowing       = true;
-=======
 
         artUI.style.display      = 'block';
         artUI.style.pointerEvents = 'auto';
@@ -158,7 +133,6 @@ export function setupUI() {
         artUI.style.transform = 'translateY(0)';
 
         isInfoShowing = true;
->>>>>>> Stashed changes
         promptUI.style.display = 'none';
     }
 
@@ -177,26 +151,17 @@ export function setupUI() {
     function handleInteract() {
         if (!hoveredObj) return;
         if (hoveredObj.userData.isArt) {
-<<<<<<< Updated upstream
-            isInfoShowing ? (hideArtInfo(), promptUI.style.display = 'block')
-                          : showArtInfo(hoveredObj.userData.title, hoveredObj.userData.desc);
-=======
             isInfoShowing ? hideArtInfo() : showArtInfo(hoveredObj.userData.title, hoveredObj.userData.desc);
             if (!isInfoShowing) promptUI.style.display = 'block';
->>>>>>> Stashed changes
         } else if (hoveredObj.userData.isAudioButton) {
             toggleAudioPlayback(hoveredObj.userData.audioData);
         }
     }
 
-<<<<<<< Updated upstream
-    // Raycaster — reuse vector
-=======
     document.addEventListener('keydown', e => { if (e.code === 'KeyE') handleInteract(); });
     document.addEventListener('click',   ()  => { if (document.pointerLockElement) handleInteract(); });
 
     // ── Raycaster ──────────────────────────────────────
->>>>>>> Stashed changes
     const raycaster    = new THREE.Raycaster();
     const screenCenter = new THREE.Vector2(0, 0);
 
@@ -211,17 +176,10 @@ export function setupUI() {
                 hideArtInfo();
                 hoveredObj = obj;
                 if (obj.userData.isArt) {
-<<<<<<< Updated upstream
-                    promptUI.innerHTML     = 'Nhấn <b>[E]</b> để đọc thông tin';
-                    promptUI.style.display = 'block';
-                } else if (obj.userData.isAudioButton) {
-                    promptUI.innerHTML     = 'Nhấn <b>[E]</b> để Bật/Tắt Thuyết Minh';
-=======
                     promptUI.innerHTML     = 'Nhấn <b>[E]</b> hoặc <b>Click</b> để đọc thông tin';
                     promptUI.style.display = 'block';
                 } else if (obj.userData.isAudioButton) {
                     promptUI.innerHTML     = 'Nhấn <b>[E]</b> hoặc <b>Click</b> để Bật/Tắt Thuyết Minh';
->>>>>>> Stashed changes
                     promptUI.style.display = 'block';
                 }
             }
