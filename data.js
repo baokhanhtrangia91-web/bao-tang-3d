@@ -297,5 +297,10 @@ export const ARTWORKS_INFO = [
         id: 'tree',
         type: 'model',
         modelUrl: '/model/tree.glb',
+    },
+    {
+        id: 'watcher',
+        type: 'model',
+        modelUrl: '/model/watcher.glb',
     }
 ];

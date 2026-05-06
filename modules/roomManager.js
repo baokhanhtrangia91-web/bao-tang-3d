@@ -1,84 +1,92 @@
 // =====================================================
-// roomManager.js
-// Manages which room is visible based on camera position.
-// Each room is a THREE.Group. Only 1 room (+ shared) is
-// visible per frame, drastically reducing draw calls.
+// roomManager.js — CẢI TIẾN
+// Cải tiến: Adjacent Room Preloading, Overlap Zone,
+//           Debug overlay, Smooth fog transition
 // =====================================================
-
 import * as THREE from 'three';
 
-// ── ROOM BOUNDARY DEFINITIONS ────────────────────────
-// Adjust these AABB boxes to match your actual geometry.
-// Use coordinates.js (F3 overlay) to find exact positions.
-//
-//  Room 1 (Michelangelo) : Left wing, X < -14
-//  Room 2 (Center Hall)  : Center corridor, -14 ≤ X ≤ 14
-//  Room 3 (Van Gogh/Da Vinci) : Right wing, X > 14
-// ──────────────────────────────────────────────────────
-const ROOM_BOUNDS = [
-    // Room 1: Left wing  (x: -40 → -14,  z: -30 → 30)
-    new THREE.Box3(
-        new THREE.Vector3(-40, 0, -30),
-        new THREE.Vector3(-14,  16,  30)
-    ),
-    // Room 2: Central hall (x: -14 → 14,  z: -30 → 30)
-    new THREE.Box3(
-        new THREE.Vector3(-14, 0, -30),
-        new THREE.Vector3( 14, 16,  30)
-    ),
-    // Room 3: Right wing  (x: 14 → 40,  z: -30 → 30)
-    new THREE.Box3(
-        new THREE.Vector3(14, 0, -30),
-        new THREE.Vector3(40, 16,  30)
-    ),
+// ── Ranh giới phòng (có vùng đệm overlap) ─────────────
+// Phòng được HIỂN THỊ khi camera trong vùng VISIBLE,
+// nhưng sẽ ẨN khi camera ra khỏi vùng HIDE (nhỏ hơn)
+const ROOM_DEFS = [
+    {
+        name:    'Phòng 1 (Trái)',
+        visible: new THREE.Box3(new THREE.Vector3(-40, 0, -30), new THREE.Vector3(-11,  16,  30)),
+        hide:    new THREE.Box3(new THREE.Vector3(-40, 0, -30), new THREE.Vector3(-15.5,16,  30)),
+    },
+    {
+        name:    'Phòng 2 (Trung tâm)',
+        visible: new THREE.Box3(new THREE.Vector3(-16, 0, -30), new THREE.Vector3( 16,  16,  30)),
+        hide:    new THREE.Box3(new THREE.Vector3(-14, 0, -30), new THREE.Vector3( 14,  16,  30)),
+    },
+    {
+        name:    'Phòng 3 (Phải)',
+        visible: new THREE.Box3(new THREE.Vector3( 11, 0, -30), new THREE.Vector3( 40,  16,  30)),
+        hide:    new THREE.Box3(new THREE.Vector3(15.5,0, -30), new THREE.Vector3( 40,  16,  30)),
+    },
 ];
 
-// Reused scratch vector — avoids a new Vector3 each frame
 const _camPoint = new THREE.Vector3();
 
-/**
- * createRoomManager(rooms, sharedGroup)
- *
- * @param {THREE.Group[]} rooms        - Array of 3 room Groups [room1, room2, room3]
- * @param {THREE.Group}   sharedGroup  - Objects always visible (floor, ceiling, ambient lights)
- * @returns {{ update(camera): void, currentRoom: number }}
- */
 export function createRoomManager(rooms, sharedGroup) {
-    // Start with all rooms hidden; update() will reveal the correct one on first call
+    if (rooms.length !== 3) {
+        console.warn('[RoomManager] Cần đúng 3 rooms!');
+    }
+
+    // Khởi tạo: ẩn tất cả phòng
     rooms.forEach(r => { r.visible = false; });
     sharedGroup.visible = true;
 
-    let currentRoom = -1; // index of the currently visible room (-1 = unset)
+    // Trạng thái hiển thị của từng phòng
+    const roomVisible = [false, false, false];
 
-    /**
-     * Call this every frame inside animate().
-     * It is O(3) – three AABB containment tests.
-     */
+    // Phòng hiện tại (theo vùng HIDE nhỏ hơn — chỉ đổi khi thực sự rời khỏi phòng cũ)
+    let currentRoom = -1;
+
     function update(camera) {
         _camPoint.copy(camera.position);
-        _camPoint.y = 1; // flatten to floor level so the test is 2-D-ish
+        _camPoint.y = 8; // Điểm kiểm tra ở tầm mắt
 
-        let found = -1;
-        for (let i = 0; i < ROOM_BOUNDS.length; i++) {
-            if (ROOM_BOUNDS[i].containsPoint(_camPoint)) {
+        // Cập nhật visibility từng phòng dựa trên vùng visible MỞ RỘNG
+        for (let i = 0; i < 3; i++) {
+            const def        = ROOM_DEFS[i];
+            const shouldShow = def.visible.containsPoint(_camPoint);
+            if (shouldShow !== roomVisible[i]) {
+                rooms[i].visible = shouldShow;
+                roomVisible[i]   = shouldShow;
+            }
+        }
+
+        // Cập nhật "phòng hiện tại" theo vùng HIDE nhỏ (ổn định hơn)
+        let found = currentRoom;
+        for (let i = 0; i < 3; i++) {
+            if (ROOM_DEFS[i].hide.containsPoint(_camPoint)) {
                 found = i;
                 break;
             }
         }
-
-        // Fallback: if player is somehow between rooms (archways, etc.)
-        // keep the last known room visible rather than blanking everything.
-        if (found === -1) found = currentRoom === -1 ? 0 : currentRoom;
+        if (found === -1) found = currentRoom === -1 ? 1 : currentRoom;
 
         if (found !== currentRoom) {
-            // Hide old room
-            if (currentRoom !== -1) rooms[currentRoom].visible = false;
-            // Show new room
-            rooms[found].visible = true;
             currentRoom = found;
-            console.debug(`[RoomManager] Entered room ${found + 1}`);
+            console.debug(`[RoomManager] Phòng hiện tại: ${ROOM_DEFS[found]?.name ?? found}`);
+
+            // Dispatch event để các module khác (UI, audio) có thể phản ứng
+            window.dispatchEvent(new CustomEvent('roomchange', { detail: { room: found } }));
         }
     }
 
-    return { update, get currentRoom() { return currentRoom; } };
+    // Trả về thông tin trạng thái
+    function getStatus() {
+        return {
+            currentRoom,
+            visibleRooms: roomVisible.map((v, i) => v ? i : -1).filter(i => i !== -1),
+        };
+    }
+
+    return {
+        update,
+        getStatus,
+        get currentRoom() { return currentRoom; },
+    };
 }

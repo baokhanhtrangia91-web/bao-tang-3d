@@ -1,86 +1,101 @@
 // =====================================================
-// main.js  (REFACTORED — Room Visibility System)
-//
-// CHANGES vs original:
-//   1. setupEnvironment now returns { collidableWalls, rooms, shared }
-//   2. createRoomManager is imported and called
-//   3. roomManager.update(camera) is called inside animate()
-//   4. Everything else is identical
+// main.js — BẢN TỐI ƯU (GIỮ MINIMAP)
 // =====================================================
 
 import * as THREE from 'three';
-import { setupScene } from './modules/scene.js';
+import { setupScene }       from './modules/scene.js';
 import { setupEnvironment } from './modules/environment.js';
-import { createRoomManager } from './modules/roomManager.js';   // ← NEW
-import { loadArtworks } from './modules/artworks.js';
-import { setupControls } from './modules/controls.js';
-import { setupUI } from './modules/ui.js';
+import { createRoomManager }from './modules/roomManager.js';
+import { loadArtworks }     from './modules/artworks.js';
+import { setupControls }    from './modules/controls.js';
+import { setupUI }          from './modules/ui.js';
 import { setupCoordinates } from './modules/coordinates.js';
-import { setupMinimap } from './modules/minimap.js';
-import { setupScreenshot } from './modules/screenshot.js';
-import { setupAudio } from './modules/audioManager.js';
+import { setupMinimap }     from './modules/minimap.js';
+import { setupScreenshot }  from './modules/screenshot.js';
+import { setupAudio }       from './modules/audioManager.js';
 
-// ── SCENE ─────────────────────────────────────────────
+// ── Loading Manager ────────────────────────────────────
+THREE.DefaultLoadingManager.onStart = (url, loaded, total) => {
+    updateLoadingProgress(loaded / total);
+};
+
+THREE.DefaultLoadingManager.onLoad = () => {
+    setTimeout(hideLoadingScreen, 400);
+};
+
+THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
+    updateLoadingProgress(loaded / total);
+};
+
+function updateLoadingProgress(ratio) {
+    const bar = document.getElementById('loading-bar-fill');
+    const pct = document.getElementById('loading-pct');
+    if (bar) bar.style.width = `${Math.round(ratio * 100)}%`;
+    if (pct) pct.textContent = `${Math.round(ratio * 100)}%`;
+}
+
+function hideLoadingScreen() {
+    const screen = document.getElementById('loading-screen');
+    if (!screen) return;
+    screen.style.transition = 'opacity 0.6s ease';
+    screen.style.opacity    = '0';
+    setTimeout(() => { screen.style.display = 'none'; }, 650);
+}
+
+// ── KHỞI TẠO HỆ THỐNG ──────────────────────────────────
 const { scene, camera, renderer } = setupScene();
-
-// ── ENVIRONMENT ───────────────────────────────────────
-// Now returns rooms[] and shared group in addition to collidableWalls
 const { collidableWalls, rooms, shared } = setupEnvironment(scene);
-
-// ── ROOM MANAGER ──────────────────────────────────────
-// Pass the 3 room Groups and the always-on shared Group
 const roomManager = createRoomManager(rooms, shared);
 
-// ── MINIMAP & SCREENSHOT ──────────────────────────────
+// Giữ lại Screenshot và Minimap[cite: 12, 20]
 const { renderMinimap } = setupMinimap(scene, renderer, camera);
 setupScreenshot(renderer, scene, camera);
 
-// ── ARTWORKS ──────────────────────────────────────────
-// artworks.js adds meshes to `scene` directly.
-// If you want per-room artwork culling, move artwork adds
-// into environment.js and route them via roomByX().
-loadArtworks(scene);
+loadArtworks(scene, (progress) => {});
 
-// ── CONTROLS ──────────────────────────────────────────
 const { controls, update: updateControls } = setupControls(camera, renderer, collidableWalls);
 
-// ── UI & COORDS ───────────────────────────────────────
-const { update: updateCoords } = setupCoordinates(camera);
+// Tọa độ & FPS counter[cite: 21]
+const { update: updateCoords } = setupCoordinates(camera, renderer);
 const { updateInteraction }    = setupUI();
 
-// ── AUDIO ─────────────────────────────────────────────
 const audio = setupAudio(camera);
 
+// ── XỬ LÝ SỰ KIỆN ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const startBtn = document.getElementById('start-btn');
+    if (startBtn) {
+        startBtn.addEventListener('pointerdown', () => {
+            controls.lock(); 
+            audio.play();    
+        });
+    }
+});
+
+controls.addEventListener('unlock', () => { 
+    audio.pause(); 
+});
+
+// ── ANIMATE LOOP ────────────────────────────────────────
 const clock = new THREE.Clock();
 
-// ── EVENT LISTENERS ───────────────────────────────────
-const startBtn = document.getElementById('start-btn');
-startBtn?.addEventListener('click', () => { audio.play(); });
-
-controls.addEventListener('unlock', () => { audio.pause(); });
-
-// =====================================================
-// ANIMATE LOOP
-// =====================================================
 function animate() {
     requestAnimationFrame(animate);
 
-    const delta = clock.getDelta();
+    const delta = Math.min(clock.getDelta(), 0.1);
 
     if (controls.isLocked) {
         updateControls(delta);
         updateCoords();
         updateInteraction(camera);
-
-        // ← ONLY CHANGE in the loop:
-        // Update which room is visible based on camera X position.
-        // This is O(3) — negligible cost.
         roomManager.update(camera);
     }
 
+    // Main render[cite: 12]
     renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.render(scene, camera);
 
+    // Render Minimap
     renderMinimap();
 }
 

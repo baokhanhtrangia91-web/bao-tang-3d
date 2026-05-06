@@ -1,3 +1,6 @@
+// =====================================================
+// artworks.js — TỐI ƯU HÓA GEOMETRY & ARTWORK LIGHTING (MUSEUM EDITION)
+// =====================================================
 import * as THREE from 'three';
 import { ARTWORKS_INFO } from '../data.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -5,28 +8,31 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 
 export const interactableObjects = [];
 
-// =====================================================
-// VẬT LIỆU KHUNG — dùng chung
-// =====================================================
+// Khung tranh được làm bóng và phản chiếu như kim loại thật
 const FRAME_MATERIALS = {
-    gold: new THREE.MeshStandardMaterial({ color: 0xc8a84b, roughness: 0.25, metalness: 0.85 }),
+    gold: new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.2, metalness: 1.0 }),
     dark: new THREE.MeshStandardMaterial({ color: 0x1a1008, roughness: 0.6, metalness: 0.3 }),
-    wood: new THREE.MeshStandardMaterial({ color: 0x6b3a1f, roughness: 0.8, metalness: 0.05 }),
+    wood: new THREE.MeshStandardMaterial({ color: 0x4a2e1b, roughness: 0.7, metalness: 0.05 }),
     silver: new THREE.MeshStandardMaterial({ color: 0xc0c0c8, roughness: 0.2, metalness: 0.9 }),
-    bronze: new THREE.MeshStandardMaterial({ color: 0x8b6914, roughness: 0.55, metalness: 0.15 }),
+    bronze: new THREE.MeshStandardMaterial({ color: 0x8b6914, roughness: 0.4, metalness: 0.8 }),
 };
 
 const CORNER_MATERIALS = {
-    gold: new THREE.MeshStandardMaterial({ color: 0xe8c060, roughness: 0.15, metalness: 0.95 }),
+    gold: new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.1, metalness: 1.0 }),
     silver: new THREE.MeshStandardMaterial({ color: 0xe0e0e8, roughness: 0.15, metalness: 0.95 }),
     other: new THREE.MeshStandardMaterial({ color: 0x8b6914, roughness: 0.15, metalness: 0.95 }),
 };
 
 const BACKING_MAT = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0 });
 
-// =====================================================
-// TẠO KHUNG
-// =====================================================
+const sharedBoxGeo = new THREE.BoxGeometry(1, 1, 1);
+
+function getRoomByX(scene, x) {
+    if (x < -14) return scene.getObjectByName('room1') || scene;
+    if (x > 14) return scene.getObjectByName('room3') || scene;
+    return scene.getObjectByName('room2') || scene;
+}
+
 function createFrame(w, h, depth, frameStyle) {
     frameStyle = frameStyle || 'gold';
     const group = new THREE.Group();
@@ -37,14 +43,15 @@ function createFrame(w, h, depth, frameStyle) {
     const cornerMat = CORNER_MATERIALS[frameStyle] || CORNER_MATERIALS.other;
 
     const bars = [
-        { size: [outerW, FW, depth], pos: [0, h / 2 + FW / 2, 0] },
-        { size: [outerW, FW, depth], pos: [0, -h / 2 - FW / 2, 0] },
-        { size: [FW, h, depth], pos: [-w / 2 - FW / 2, 0, 0] },
-        { size: [FW, h, depth], pos: [w / 2 + FW / 2, 0, 0] },
+        { scale: [outerW, FW, depth], pos: [0, h / 2 + FW / 2, 0] },
+        { scale: [outerW, FW, depth], pos: [0, -h / 2 - FW / 2, 0] },
+        { scale: [FW, h, depth], pos: [-w / 2 - FW / 2, 0, 0] },
+        { scale: [FW, h, depth], pos: [w / 2 + FW / 2, 0, 0] },
     ];
 
-    for (const { size, pos } of bars) {
-        const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), mat);
+    for (const { scale, pos } of bars) {
+        const mesh = new THREE.Mesh(sharedBoxGeo, mat);
+        mesh.scale.set(...scale);
         mesh.position.set(...pos);
         group.add(mesh);
     }
@@ -56,83 +63,68 @@ function createFrame(w, h, depth, frameStyle) {
         [-w / 2 - FW / 2, -h / 2 - FW / 2],
         [w / 2 + FW / 2, -h / 2 - FW / 2],
     ]) {
-        const c = new THREE.Mesh(new THREE.BoxGeometry(cs, cs, depth + 0.01), cornerMat);
+        const c = new THREE.Mesh(sharedBoxGeo, cornerMat);
+        c.scale.set(cs, cs, depth + 0.01);
         c.position.set(cx, cy, 0);
         group.add(c);
     }
 
     group.traverse(n => {
         if (n.isMesh) {
-            n.castShadow = true;
-            n.receiveShadow = true;
+            n.castShadow = false;
+            n.receiveShadow = false;
         }
     });
 
     return group;
 }
 
-// =====================================================
-// ADD ART
-// =====================================================
 function addArt(scene, loader, opts) {
     const {
         url, w, h, x, z, ry, title, desc,
         frameDepth, frameStyle, isInfoBoard, audioData, artInfo
     } = Object.assign({
-        y: 5,
-        ry: 0,
-        title: '',
-        desc: '',
-        frameDepth: 0.12,
-        frameStyle: 'gold',
-        isInfoBoard: false,
-        audioData: null,
-        artInfo: null
+        y: 5, ry: 0, title: '', desc: '',
+        frameDepth: 0.12, frameStyle: 'gold',
+        isInfoBoard: false, audioData: null, artInfo: null
     }, opts);
-
-    const y = opts.y !== undefined ? opts.y : 5;
 
     const tex = loader.load(url);
     tex.colorSpace = THREE.SRGBColorSpace;
 
-    const art = new THREE.Mesh(
-        new THREE.PlaneGeometry(w, h),
-        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 })
-    );
+    // BÍ QUYẾT TỐI ƯU ÁNH SÁNG BẢO TÀNG:
+    // Dùng emissive 0x1a1a1a để làm bức tranh tự tỏa sáng nhẹ trong phòng tối
+    // giống như được chiếu spotlight mà KHÔNG tốn tài nguyên GPU xử lý đèn!
+    const artMat = new THREE.MeshStandardMaterial({
+        map: tex,
+        roughness: 0.4,       // Lớp vecni bóng nhẹ
+        metalness: 0.05,
+        emissive: new THREE.Color(isInfoBoard ? 0x0a0a0a : 0x1a1a1a), // Bảng thông tin tối hơn tranh nghệ thuật
+        emissiveMap: tex      // Màu tự sáng dựa trên hình ảnh thật của bức tranh
+    });
 
+    const art = new THREE.Mesh(new THREE.PlaneGeometry(w, h), artMat);
     art.position.z = frameDepth / 2 + 0.005;
-
-    // 🔥 QUAN TRỌNG: lưu full info
-    art.userData = {
-        isArt: true,
-        title,
-        desc,
-        artInfo
-    };
-
+    art.userData = { isArt: true, title, desc, artInfo };
     interactableObjects.push(art);
 
     const frame = createFrame(w, h, frameDepth, isInfoBoard ? 'dark' : frameStyle);
 
-    const backing = new THREE.Mesh(
-        new THREE.BoxGeometry(w + 0.42, h + 0.42, 0.04),
-        BACKING_MAT
-    );
+    const backing = new THREE.Mesh(sharedBoxGeo, BACKING_MAT);
+    backing.scale.set(w + 0.42, h + 0.42, 0.04);
     backing.position.z = -frameDepth / 2 - 0.02;
 
     const group = new THREE.Group();
     group.add(backing, frame, art);
 
-    // =====================================================
-    // AUDIO BUTTON
-    // =====================================================
     if (audioData && audioData.url) {
         const audioBtnGroup = new THREE.Group();
 
         const baseMesh = new THREE.Mesh(
-            new THREE.BoxGeometry(0.5, 0.3, 0.04),
+            sharedBoxGeo,
             new THREE.MeshStandardMaterial({ color: 0x222222 })
         );
+        baseMesh.scale.set(0.5, 0.3, 0.04);
 
         const btnMesh = new THREE.Mesh(
             new THREE.CylinderGeometry(0.08, 0.08, 0.02, 32),
@@ -143,12 +135,12 @@ function addArt(scene, loader, opts) {
         btnMesh.position.z = 0.03;
 
         const hitBox = new THREE.Mesh(
-            new THREE.BoxGeometry(0.8, 0.6, 0.1),
+            sharedBoxGeo,
             new THREE.MeshBasicMaterial({ visible: false })
         );
+        hitBox.scale.set(0.8, 0.6, 0.1);
 
         const btnData = { isAudioButton: true, audioData };
-
         baseMesh.userData = btnData;
         btnMesh.userData = btnData;
         hitBox.userData = btnData;
@@ -157,88 +149,57 @@ function addArt(scene, loader, opts) {
 
         audioBtnGroup.add(baseMesh, btnMesh, hitBox);
         audioBtnGroup.position.set(0, -h / 2 - 0.5, frameDepth / 2);
-
         group.add(audioBtnGroup);
     }
 
-    group.position.set(x, y, z);
+    group.position.set(x, opts.y !== undefined ? opts.y : 5, z);
     group.rotation.y = ry;
 
-    scene.add(group);
+    const targetRoom = getRoomByX(scene, x);
+    targetRoom.add(group);
 }
 
-// =====================================================
-// CHỈ CHỨA TỌA ĐỘ
-// =====================================================
 const ARTWORKS_POSITION = [
-    // add arts
     { id: '6', w: 5, h: 7.5, x: 0, y: 5.5, z: -28.9, ry: 0 },
     { id: '7', w: 20.7, h: 11.64, x: 13.4, y: 6.9, z: -7.5, ry: -Math.PI / 2 },
     { id: '8', w: 4, h: 6, x: -13.4, y: 6, z: -23, ry: Math.PI / 2 },
-
     { id: '1', w: 18, h: 10, x: -26, y: 8, z: -28.9, ry: 0 },
     { id: '2', w: 8, h: 7, x: -38.9, y: 6, z: -10, ry: Math.PI / 2 },
     { id: '3', w: 8, h: 8, x: -38.9, y: 6, z: 18, ry: Math.PI / 2 },
     { id: '4', w: 9, h: 10.5, x: -14.6, y: 7, z: -15, ry: -Math.PI / 2 },
     { id: '5', w: 9, h: 7, x: -14.6, y: 7, z: 2, ry: -Math.PI / 2 },
-
     { id: '9', w: 6, h: 6.5, x: -13.4, y: 6, z: -8.5, ry: Math.PI / 2 },
     { id: '10', w: 5, h: 7, x: -13.4, y: 6, z: 5, ry: Math.PI / 2 },
-
     { id: '11', w: 7, h: 6, x: 38.9, y: 6, z: -13.5, ry: -Math.PI / 2 },
     { id: '12', w: 6, h: 6, x: 14.6, y: 6, z: -14, ry: Math.PI / 2 },
     { id: '13', w: 8, h: 6, x: 31.5, y: 6, z: -5.6, ry: Math.PI },
-
     { id: '14', w: 7, h: 6, x: 14.6, y: 6, z: 8, ry: Math.PI / 2 },
     { id: '15', w: 6, h: 7, x: 19, y: 5, z: -23.4, ry: 0 },
     { id: '16', w: 6, h: 6, x: 32.9, y: 10, z: 24.3, ry: -Math.PI / 2 },
     { id: '17', w: 6, h: 6, x: 32.9, y: 10, z: 15, ry: -Math.PI / 2 },
-    // add models
     { id: 'm4', x: 36.7, y: 2.5, z: 24.3, ry: Math.PI * 2 / 3, scale: 6.8 },
-    { id: 'm9', x: 36.7, y: 1, z: 3, ry: 0, scale: 1.5 },
+    { id: 'm9', x: 36.7, y: 0, z: 3, ry: 0, scale: 1.5 },
     { id: 'm8', x: 36.9, y: 0, z: 15, ry: -Math.PI / 2, scale: 2.4 },
-    { id: 'm7', x: 31, y: 3, z: -26.5, ry: 0, scale: 2.5 },
-    { id: 'm10', x: 36.7, y: 1, z: 8.7, ry: 0, scale: 0.7 },
-    // add trees
+    { id: 'm7', x: 31, y: 2.7, z: -26.5, ry: 0, scale: 2.5 },
+    { id: 'm10', x: 36.7, y: 0, z: 8.7, ry: 0, scale: 0.7 },
     { id: 'tree', x: -12, y: 0, z: 16.5, ry: 0, scale: 1.5 },
     { id: 'tree', x: 12, y: 0, z: 16.5, ry: 0, scale: 1.5 },
+    { id: 'watcher', x: 0, y: 0, z: 29.1, ry: Math.PI, scale: 1 },
 ];
 
-// =====================================================
-// GHÉP DATA
-// =====================================================
 const GALLERY_DATA = ARTWORKS_POSITION.map(pos => {
     const info = ARTWORKS_INFO.find(a => a.id === pos.id);
-
-    if (!info) {
-        console.warn('Missing data for id:', pos.id);
-        return null;
-    }
-
-    return {
-        ...pos,
-        url: info.imageUrl,
-        title: info.title,
-        desc: info.desc,
-        frameStyle: info.frameStyle,
-        artInfo: info,
-        audioData: { url: info.audioUrl }
-    };
+    if (!info) return null;
+    return { ...pos, url: info.imageUrl, title: info.title, desc: info.desc, frameStyle: info.frameStyle, artInfo: info, audioData: { url: info.audioUrl } };
 }).filter(Boolean);
 
-// =====================================================
-// BẢNG THÔNG TIN
-// =====================================================
 const INFO_BOARDS = [
     { url: '/model/bang.jpg', w: 6, h: 8.4, x: -25.5, y: 4.35, z: 28.5, ry: Math.PI },
-    { url: '/model/z7754718409982_fa3b56a56702c325f8c0a95f4d907868.jpg', w: 6, h: 8.4, x: 23.5, y: 4.35, z: 28.5, ry: Math.PI },
-    { url: '/model/Bang2.png', w: 6, h: 8.4, x: 10.25, y: 4.35, z: 14.2, ry: Math.PI },
+    { url: '/model/bang3.jpg', w: 6, h: 8.4, x: 23.5, y: 4.35, z: 28.5, ry: Math.PI },
+    { url: '/model/Bang2.jpg', w: 6, h: 8.4, x: 10.25, y: 4.35, z: 14.2, ry: Math.PI },
     { url: '/model/thông báo.jpg', w: 4, h: 6.4, x: 33, y: 3.5, z: -2, ry: -Math.PI / 2 },
 ];
 
-// =====================================================
-// LOAD
-// =====================================================
 export function loadArtworks(scene) {
     const loader = new THREE.TextureLoader();
     const gltfLoader = new GLTFLoader();
@@ -248,7 +209,6 @@ export function loadArtworks(scene) {
     dracoLoader.setDecoderConfig({ type: 'js' });
     gltfLoader.setDRACOLoader(dracoLoader);
 
-    // ================= BẢNG THÔNG TIN =================
     for (const board of INFO_BOARDS) {
         addArt(scene, loader, {
             ...board,
@@ -257,31 +217,31 @@ export function loadArtworks(scene) {
         });
     }
 
-    // ================= TRANH & MODEL =================
     for (const item of GALLERY_DATA) {
         if (!item) continue;
 
-        // ================= MODEL 3D =================
         if (item.artInfo?.type === 'model') {
             gltfLoader.load(item.artInfo.modelUrl, (gltf) => {
                 const model = gltf.scene;
                 model.position.set(item.x, item.y, item.z);
                 model.rotation.y = item.ry || 0;
                 model.scale.setScalar(item.scale || 1);
+
                 model.traverse((n) => {
                     if (n.isMesh) {
-                        n.castShadow = true;
-                        n.receiveShadow = true;
+                        n.castShadow = false;
+                        n.receiveShadow = false;
                     }
                 });
-                scene.add(model);
+
+                const targetRoom = getRoomByX(scene, item.x);
+                targetRoom.add(model);
             }, undefined, (err) => {
                 console.error('Lỗi load model:', err);
             });
             continue;
         }
 
-        // ================= TRANH =================
         addArt(scene, loader, item);
     }
 }
