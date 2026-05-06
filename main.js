@@ -5,30 +5,12 @@
 import * as THREE from 'three';
 import { setupScene }       from './modules/scene.js';
 import { setupEnvironment } from './modules/environment.js';
-<<<<<<< Updated upstream
-=======
 import { createRoomManager }from './modules/roomManager.js';
->>>>>>> Stashed changes
 import { loadArtworks }     from './modules/artworks.js';
 import { setupControls }    from './modules/controls.js';
 import { setupUI }          from './modules/ui.js';
 import { setupCoordinates } from './modules/coordinates.js';
 import { setupMinimap }     from './modules/minimap.js';
-<<<<<<< Updated upstream
-import { setupScreenshot }  from './modules/screenshot.js'; 
-
-const { scene, camera, renderer } = setupScene();
-const { collidableWalls }         = setupEnvironment(scene);
-const { renderMinimap }           = setupMinimap(scene, renderer, camera);
-
-setupScreenshot(renderer, scene, camera);
-
-loadArtworks(scene);
-
-const { update: updateControls }        = setupControls(camera, renderer, collidableWalls);
-const { update: updateCoords }          = setupCoordinates(camera);
-const { updateInteraction }             = setupUI();
-=======
 import { setupScreenshot }  from './modules/screenshot.js';
 import { setupAudio }       from './modules/audioManager.js';
 
@@ -76,7 +58,6 @@ const { controls, update: updateControls } = setupControls(camera, renderer, col
 // Tọa độ & FPS counter[cite: 21]
 const { update: updateCoords } = setupCoordinates(camera, renderer);
 const { updateInteraction }    = setupUI();
->>>>>>> Stashed changes
 
 const audio = setupAudio(camera);
 
@@ -103,28 +84,18 @@ function animate() {
 
     const delta = Math.min(clock.getDelta(), 0.1);
 
-<<<<<<< Updated upstream
-    updateControls(delta);
-    updateCoords();
-    updateInteraction(camera);          
-=======
     if (controls.isLocked) {
         updateControls(delta);
         updateCoords();
         updateInteraction(camera);
         roomManager.update(camera);
     }
->>>>>>> Stashed changes
 
     // Main render[cite: 12]
     renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.render(scene, camera);
-<<<<<<< Updated upstream
-    
-=======
 
     // Render Minimap
->>>>>>> Stashed changes
     renderMinimap();
 }
 
