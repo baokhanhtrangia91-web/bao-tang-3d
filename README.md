@@ -1,4 +1,4 @@
-# 🏛️ Bảo Tàng Nghệ Thuật Virtual 3D
+# 🏛️ Bảo Tàng Nghệ Thuật Virtual 3D (Demo)
 
 Trải nghiệm tham quan bảo tàng nghệ thuật thế giới ngay trên trình duyệt — không cần cài đặt, không cần plugin. Di chuyển tự do trong không gian 3D, đọc thông tin và nghe thuyết minh cho từng tác phẩm.
 
