@@ -1,111 +1,101 @@
+// =====================================================
+// main.js — BẢN TỐI ƯU (GIỮ MINIMAP)
+// =====================================================
+
 import * as THREE from 'three';
-import { setupScene } from './modules/scene.js';
+import { setupScene }       from './modules/scene.js';
 import { setupEnvironment } from './modules/environment.js';
-import { loadArtworks } from './modules/artworks.js';
-import { setupControls } from './modules/controls.js';
-import { setupUI } from './modules/ui.js';
+import { createRoomManager }from './modules/roomManager.js';
+import { loadArtworks }     from './modules/artworks.js';
+import { setupControls }    from './modules/controls.js';
+import { setupUI }          from './modules/ui.js';
 import { setupCoordinates } from './modules/coordinates.js';
-import { setupMinimap } from './modules/minimap.js';
-import { setupScreenshot } from './modules/screenshot.js';
+import { setupMinimap }     from './modules/minimap.js';
+import { setupScreenshot }  from './modules/screenshot.js';
+import { setupAudio }       from './modules/audioManager.js';
 
-// =====================================================
-// SCENE
-// =====================================================
+// ── Loading Manager ────────────────────────────────────
+THREE.DefaultLoadingManager.onStart = (url, loaded, total) => {
+    updateLoadingProgress(loaded / total);
+};
+
+THREE.DefaultLoadingManager.onLoad = () => {
+    setTimeout(hideLoadingScreen, 400);
+};
+
+THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
+    updateLoadingProgress(loaded / total);
+};
+
+function updateLoadingProgress(ratio) {
+    const bar = document.getElementById('loading-bar-fill');
+    const pct = document.getElementById('loading-pct');
+    if (bar) bar.style.width = `${Math.round(ratio * 100)}%`;
+    if (pct) pct.textContent = `${Math.round(ratio * 100)}%`;
+}
+
+function hideLoadingScreen() {
+    const screen = document.getElementById('loading-screen');
+    if (!screen) return;
+    screen.style.transition = 'opacity 0.6s ease';
+    screen.style.opacity    = '0';
+    setTimeout(() => { screen.style.display = 'none'; }, 650);
+}
+
+// ── KHỞI TẠO HỆ THỐNG ──────────────────────────────────
 const { scene, camera, renderer } = setupScene();
-const { collidableWalls } = setupEnvironment(scene);
-const { renderMinimap } = setupMinimap(scene, renderer, camera);
+const { collidableWalls, rooms, shared } = setupEnvironment(scene);
+const roomManager = createRoomManager(rooms, shared);
 
+// Giữ lại Screenshot và Minimap[cite: 12, 20]
+const { renderMinimap } = setupMinimap(scene, renderer, camera);
 setupScreenshot(renderer, scene, camera);
-loadArtworks(scene);
+
+loadArtworks(scene, (progress) => {});
 
 const { controls, update: updateControls } = setupControls(camera, renderer, collidableWalls);
-const { update: updateCoords } = setupCoordinates(camera);
-const { updateInteraction } = setupUI();
 
+// Tọa độ & FPS counter[cite: 21]
+const { update: updateCoords } = setupCoordinates(camera, renderer);
+const { updateInteraction }    = setupUI();
+
+const audio = setupAudio(camera);
+
+// ── XỬ LÝ SỰ KIỆN ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const startBtn = document.getElementById('start-btn');
+    if (startBtn) {
+        startBtn.addEventListener('pointerdown', () => {
+            controls.lock(); 
+            audio.play();    
+        });
+    }
+});
+
+controls.addEventListener('unlock', () => { 
+    audio.pause(); 
+});
+
+// ── ANIMATE LOOP ────────────────────────────────────────
 const clock = new THREE.Clock();
 
-
-// =====================================================
-// 🎵 BACKGROUND MUSIC
-// =====================================================
-const listener = new THREE.AudioListener();
-camera.add(listener);
-
-const bgMusic = new THREE.Audio(listener);
-const audioLoader = new THREE.AudioLoader();
-
-let musicReady = false;
-let userWantsMusic = false; // 🔥 KEY FIX
-
-audioLoader.load(
-    'audio/0sound effects/music.mp3',
-    (buffer) => {
-        bgMusic.setBuffer(buffer);
-        bgMusic.setLoop(true);
-        bgMusic.setVolume(0.25);
-        musicReady = true;
-
-        // 🔥 nếu user đã bấm start trước đó → auto play ngay
-        if (userWantsMusic && !bgMusic.isPlaying) {
-            bgMusic.play();
-        }
-    },
-    undefined,
-    (err) => console.error('Lỗi load nhạc:', err)
-);
-
-function playMusic() {
-    userWantsMusic = true; // 🔥 nhớ rằng user muốn nghe
-
-    if (musicReady && !bgMusic.isPlaying) {
-        bgMusic.play();
-    }
-}
-
-function pauseMusic() {
-    userWantsMusic = false;
-
-    if (bgMusic.isPlaying) {
-        bgMusic.pause();
-    }
-}
-
-
-// =====================================================
-// 🎯 START BUTTON (QUAN TRỌNG NHẤT)
-// =====================================================
-const startBtn = document.getElementById('start-btn');
-
-startBtn?.addEventListener('click', () => {
-    playMusic(); // gọi trực tiếp từ user click
-});
-
-
-// =====================================================
-// ESC → pause
-// =====================================================
-controls.addEventListener('unlock', () => {
-    pauseMusic();
-});
-
-
-// =====================================================
-// ANIMATE
-// =====================================================
 function animate() {
     requestAnimationFrame(animate);
 
-    const delta = clock.getDelta();
+    const delta = Math.min(clock.getDelta(), 0.1);
 
     if (controls.isLocked) {
         updateControls(delta);
         updateCoords();
         updateInteraction(camera);
+        roomManager.update(camera);
     }
 
+    // Main render[cite: 12]
     renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.render(scene, camera);
 
+    // Render Minimap
     renderMinimap();
 }
 

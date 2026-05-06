@@ -18,8 +18,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Gom thư viện Three.js vào một file riêng để trình duyệt tải hiệu quả hơn
-        manualChunks: {
-          three: ['three']
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         }
       }
     }
