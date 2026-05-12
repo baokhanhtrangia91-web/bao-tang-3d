@@ -1,8 +1,7 @@
-// =====================================================
-// ui.js — NÂNG CẤP: CSS transition mượt, thiết kế sang hơn
-// =====================================================
+
 import * as THREE from 'three';
 import { interactableObjects } from './artworks.js';
+import { onArtworkViewed, isPaintingViewed } from './questSystem.js';
 
 const INTERACTION_DIST = 6.5;
 
@@ -22,37 +21,36 @@ export function setupUI() {
     let isInfoShowing    = false;
     let playingAudioUrl  = '';
 
-    // ── Thêm CSS transition cho panel ─────────────────
-    // Inject style nếu chưa có (không cần sửa HTML)
+    // ── CSS transition cho panel ───────────────────────
     if (artUI && !artUI.dataset.styled) {
         artUI.dataset.styled = '1';
         Object.assign(artUI.style, {
-            transition:  'opacity 0.35s ease, transform 0.35s ease',
-            opacity:     '0',
-            transform:   'translateY(12px)',
+            transition:    'opacity 0.35s ease, transform 0.35s ease',
+            opacity:       '0',
+            transform:     'translateY(12px)',
             pointerEvents: 'none',
         });
     }
 
-    // Tooltip tương tác
+    // ── Tooltip tương tác ─────────────────────────────
     const promptUI = (() => {
         let el = document.getElementById('interaction-prompt');
         if (!el) {
             el = document.createElement('div');
             el.id = 'interaction-prompt';
             Object.assign(el.style, {
-                position:   'absolute',
-                top:        '55%',
-                left:       '50%',
-                transform:  'translate(-50%, -50%)',
-                color:      '#f5e6c8',
-                background: 'rgba(10,8,4,0.75)',
-                padding:    '10px 20px',
-                border:     '1px solid rgba(212,175,55,0.6)',
-                borderRadius: '8px',
-                fontFamily: '"Segoe UI", "Roboto", "Arial", sans-serif',
-                fontSize:     '14px',
-                letterSpacing:'0.5px',
+                position:       'absolute',
+                top:            '55%',
+                left:           '50%',
+                transform:      'translate(-50%, -50%)',
+                color:          '#f5e6c8',
+                background:     'rgba(10,8,4,0.75)',
+                padding:        '10px 20px',
+                border:         '1px solid rgba(212,175,55,0.6)',
+                borderRadius:   '8px',
+                fontFamily:     '"Segoe UI", "Roboto", "Arial", sans-serif',
+                fontSize:       '14px',
+                letterSpacing:  '0.5px',
                 backdropFilter: 'blur(4px)',
                 pointerEvents:  'none',
                 display:        'none',
@@ -64,17 +62,17 @@ export function setupUI() {
         return el;
     })();
 
-    // ── Vignette overlay (tối góc màn hình — cảm giác cinematic) ──
+    // ── Vignette overlay ──────────────────────────────
     (() => {
         if (document.getElementById('vignette-overlay')) return;
         const v = document.createElement('div');
         v.id = 'vignette-overlay';
         Object.assign(v.style, {
-            position:       'fixed',
-            inset:          '0',
-            pointerEvents:  'none',
-            zIndex:         '5',
-            background:     'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%)',
+            position:      'fixed',
+            inset:         '0',
+            pointerEvents: 'none',
+            zIndex:        '5',
+            background:    'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%)',
         });
         document.body.appendChild(v);
     })();
@@ -86,7 +84,7 @@ export function setupUI() {
             const time = artAudio.currentTime;
             const sub  = currentSubtitles.find(s => time >= s.start && time <= s.end);
             if (sub) {
-                subtitleText.innerHTML    = sub.text;
+                subtitleText.innerHTML     = sub.text;
                 subtitleText.style.display = 'inline-block';
             } else {
                 subtitleText.style.display = 'none';
@@ -118,7 +116,7 @@ export function setupUI() {
         artAudio.play().catch(e => console.log('Autoplay bị chặn:', e));
     }
 
-    // ── Show / Hide Panel với animation ───────────────
+    // ── Show / Hide Panel ─────────────────────────────
     function showArtInfo(title, desc) {
         if (!artUI) return;
         if (artTitle) artTitle.textContent = title;
@@ -127,7 +125,6 @@ export function setupUI() {
         artUI.style.display      = 'block';
         artUI.style.pointerEvents = 'auto';
 
-        // Trigger reflow để transition hoạt động
         void artUI.offsetWidth;
         artUI.style.opacity   = '1';
         artUI.style.transform = 'translateY(0)';
@@ -141,20 +138,41 @@ export function setupUI() {
         artUI.style.opacity      = '0';
         artUI.style.transform    = 'translateY(12px)';
         artUI.style.pointerEvents = 'none';
-        // Ẩn sau khi animation xong
         setTimeout(() => {
             if (!isInfoShowing) artUI.style.display = 'none';
         }, 360);
         isInfoShowing = false;
     }
 
+    // ── handleInteract (xử lý tất cả loại object) ────
     function handleInteract() {
         if (!hoveredObj) return;
+
         if (hoveredObj.userData.isArt) {
-            isInfoShowing ? hideArtInfo() : showArtInfo(hoveredObj.userData.title, hoveredObj.userData.desc);
+            const artInfo = hoveredObj.userData.artInfo;
+            if (artInfo) onArtworkViewed(artInfo);
+
+            if (isInfoShowing) {
+                hideArtInfo();
+            } else {
+                showArtInfo(hoveredObj.userData.title, hoveredObj.userData.desc);
+            }
             if (!isInfoShowing) promptUI.style.display = 'block';
+
         } else if (hoveredObj.userData.isAudioButton) {
             toggleAudioPlayback(hoveredObj.userData.audioData);
+
+        } else if (hoveredObj.userData.isSwitch) {
+            // ── CẦU DAO ĐIỆN ──────────────────────────
+            if (typeof hoveredObj.userData.onActivate === 'function') {
+                hoveredObj.userData.onActivate();
+            }
+            // Cập nhật lại tooltip ngay sau khi toggle
+            const promptFn = hoveredObj.userData.getPromptText;
+            if (promptFn) {
+                promptUI.innerHTML     = promptFn();
+                promptUI.style.display = 'block';
+            }
         }
     }
 
@@ -175,15 +193,41 @@ export function setupUI() {
             if (obj !== hoveredObj) {
                 hideArtInfo();
                 hoveredObj = obj;
+
                 if (obj.userData.isArt) {
-                    promptUI.innerHTML     = 'Nhấn <b>[E]</b> hoặc <b>Click</b> để đọc thông tin';
+                    const artInfo = obj.userData.artInfo;
+                    const viewed  = artInfo ? isPaintingViewed(artInfo) : false;
+                    const check   = viewed ? ' ✓' : '';
+                    promptUI.innerHTML     = `Nhấn <b>[E]</b> hoặc <b>Click</b> để đọc thông tin${check}`;
                     promptUI.style.display = 'block';
+
                 } else if (obj.userData.isAudioButton) {
                     promptUI.innerHTML     = 'Nhấn <b>[E]</b> hoặc <b>Click</b> để Bật/Tắt Thuyết Minh';
                     promptUI.style.display = 'block';
+
+                } else if (obj.userData.isSwitch) {
+                    // Gọi hàm dynamic để lấy text đúng trạng thái
+                    const fn = obj.userData.getPromptText;
+                    promptUI.innerHTML     = fn ? fn() : 'Nhấn <b>[E]</b> để tương tác với cầu dao';
+                    promptUI.style.display = 'block';
+
+                    // Style đặc biệt cho switch prompt (viền đỏ/vàng)
+                    promptUI.style.borderColor  = 'rgba(255,200,0,0.8)';
+                    promptUI.style.color        = '#ffe066';
                 }
+
+            } else if (obj.userData.isSwitch) {
+                // Cập nhật text liên tục trong khi nhìn vào switch
+                // (vì text thay đổi sau khi toggle)
+                const fn = obj.userData.getPromptText;
+                if (fn) promptUI.innerHTML = fn();
             }
+
         } else if (hoveredObj !== null) {
+            // Rời khỏi object — khôi phục màu mặc định prompt
+            promptUI.style.borderColor = 'rgba(212,175,55,0.6)';
+            promptUI.style.color       = '#f5e6c8';
+
             hoveredObj             = null;
             promptUI.style.display = 'none';
             hideArtInfo();

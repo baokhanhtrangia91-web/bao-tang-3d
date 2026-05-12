@@ -6,18 +6,18 @@
 import * as THREE from 'three';
 
 const FADE_DURATION = 1.5;  // giây để fade in/out
-const MUSIC_VOLUME  = 0.4; // âm lượng mặc định (0-1)
+const MUSIC_VOLUME = 0.3; // âm lượng mặc định (0-1)
 
 export function setupAudio(camera) {
     const listener = new THREE.AudioListener();
     camera.add(listener);
 
     const bgMusic = new THREE.Audio(listener);
-    const loader  = new THREE.AudioLoader();
+    const loader = new THREE.AudioLoader();
 
-    let musicReady    = false;
+    let musicReady = false;
     let userWantsMusic = false;
-    let fadeInterval  = null;
+    let fadeInterval = null;
 
     // ── Load nhạc nền ──────────────────────────────────
     loader.load(
@@ -25,7 +25,7 @@ export function setupAudio(camera) {
         (buffer) => {
             bgMusic.setBuffer(buffer);
             bgMusic.setLoop(true);
-            bgMusic.setVolume(0); // Bắt đầu từ 0, fade in sau
+            bgMusic.setVolume(-1); // Bắt đầu từ 0, fade in sau
             musicReady = true;
 
             if (userWantsMusic && !bgMusic.isPlaying) {
@@ -54,25 +54,28 @@ export function setupAudio(camera) {
     }
 
     // ── Fade helper ────────────────────────────────────
-    function fadeVolume(targetVol) {
+    function fadeVolume(targetVol, onDone) {
         if (fadeInterval) clearInterval(fadeInterval);
 
-        const steps    = 60;
+        const steps = 60;
         const stepTime = (FADE_DURATION * 1000) / steps;
-        const startVol = bgMusic.getVolume?.() ?? bgMusic.gain?.gain?.value ?? 0;
-        const delta    = (targetVol - startVol) / steps;
-        let   count    = 0;
+        const startVol = bgMusic.gain?.gain?.value ?? bgMusic.getVolume?.() ?? 0;
+        const delta = (targetVol - startVol) / steps;
+        let count = 0;
 
         fadeInterval = setInterval(() => {
             count++;
             const newVol = Math.max(0, Math.min(1, startVol + delta * count));
-            try { bgMusic.setVolume(newVol); } catch (_) {}
+            try { bgMusic.setVolume(newVol); } catch (_) { }
             if (count >= steps) {
                 clearInterval(fadeInterval);
                 fadeInterval = null;
-                if (newVol === 0 && bgMusic.isPlaying) {
-                    bgMusic.pause();
+                try { bgMusic.setVolume(targetVol); } catch (_) { }
+                if (targetVol === 0) {
+                    // Dừng bất kể isPlaying có đúng hay không
+                    try { if (bgMusic.source) bgMusic.stop(); else bgMusic.pause(); } catch (_) { }
                 }
+                if (onDone) onDone();
             }
         }, stepTime);
     }
@@ -93,19 +96,28 @@ export function setupAudio(camera) {
 
     function pause() {
         userWantsMusic = false;
-        if (musicReady && bgMusic.isPlaying) {
-            fadeVolume(0); // Fade out rồi mới pause (trong fadeVolume)
-        }
+        if (!musicReady) return;
+        // Không kiểm tra isPlaying — bỏ qua luôn để tránh bug THREE.Audio
+        if (fadeInterval) clearInterval(fadeInterval);
+        fadeVolume(0);
+    }
+
+    // Dừng ngay lập tức không fade (dùng cho night mode khi cần tắt tức thì)
+    function stopNow() {
+        userWantsMusic = false;
+        if (fadeInterval) clearInterval(fadeInterval);
+        try { bgMusic.setVolume(0); } catch (_) { }
+        try { if (bgMusic.source) bgMusic.stop(); else bgMusic.pause(); } catch (_) { }
     }
 
     function setVolume(vol) {
         if (!musicReady) return;
-        try { bgMusic.setVolume(Math.max(0, Math.min(1, vol))); } catch (_) {}
+        try { bgMusic.setVolume(Math.max(0, Math.min(1, vol))); } catch (_) { }
     }
 
     function toggle() {
         userWantsMusic ? pause() : play();
     }
 
-    return { play, pause, toggle, setVolume };
+    return { play, pause, stopNow, toggle, setVolume };
 }

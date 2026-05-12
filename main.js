@@ -1,6 +1,3 @@
-// =====================================================
-// main.js — BẢN TỐI ƯU (GIỮ MINIMAP)
-// =====================================================
 
 import * as THREE from 'three';
 import { setupScene }       from './modules/scene.js';
@@ -13,16 +10,16 @@ import { setupCoordinates } from './modules/coordinates.js';
 import { setupMinimap }     from './modules/minimap.js';
 import { setupScreenshot }  from './modules/screenshot.js';
 import { setupAudio }       from './modules/audioManager.js';
+import { initQuestSystem }  from './modules/questSystem.js';
+import { setupNightMode }   from './modules/nightMode.js';
 
 // ── Loading Manager ────────────────────────────────────
 THREE.DefaultLoadingManager.onStart = (url, loaded, total) => {
     updateLoadingProgress(loaded / total);
 };
-
 THREE.DefaultLoadingManager.onLoad = () => {
     setTimeout(hideLoadingScreen, 400);
 };
-
 THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
     updateLoadingProgress(loaded / total);
 };
@@ -47,7 +44,6 @@ const { scene, camera, renderer } = setupScene();
 const { collidableWalls, rooms, shared } = setupEnvironment(scene);
 const roomManager = createRoomManager(rooms, shared);
 
-// Giữ lại Screenshot và Minimap[cite: 12, 20]
 const { renderMinimap } = setupMinimap(scene, renderer, camera);
 setupScreenshot(renderer, scene, camera);
 
@@ -55,25 +51,29 @@ loadArtworks(scene, (progress) => {});
 
 const { controls, update: updateControls } = setupControls(camera, renderer, collidableWalls);
 
-// Tọa độ & FPS counter[cite: 21]
 const { update: updateCoords } = setupCoordinates(camera, renderer);
 const { updateInteraction }    = setupUI();
 
+initQuestSystem();
+
 const audio = setupAudio(camera);
+
+// ── NIGHT MODE ──────────────────────────────────────────
+const nightMode = setupNightMode(scene, camera);
 
 // ── XỬ LÝ SỰ KIỆN ──────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     const startBtn = document.getElementById('start-btn');
     if (startBtn) {
         startBtn.addEventListener('pointerdown', () => {
-            controls.lock(); 
-            audio.play();    
+            controls.lock();
+            audio.play();
         });
     }
 });
 
-controls.addEventListener('unlock', () => { 
-    audio.pause(); 
+controls.addEventListener('unlock', () => {
+    audio.pause();
 });
 
 // ── ANIMATE LOOP ────────────────────────────────────────
@@ -89,13 +89,12 @@ function animate() {
         updateCoords();
         updateInteraction(camera);
         roomManager.update(camera);
+        nightMode.update(delta);
     }
 
-    // Main render[cite: 12]
     renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.render(scene, camera);
 
-    // Render Minimap
     renderMinimap();
 }
 

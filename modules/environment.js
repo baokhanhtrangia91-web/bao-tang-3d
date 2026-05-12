@@ -13,16 +13,16 @@ export function setupEnvironment(scene) {
     const WALL_THICK = 1;
 
     // ── ROOM GROUPS ──────────────────────────────────
-    const room1  = new THREE.Group(); room1.name  = 'room1';
-    const room2  = new THREE.Group(); room2.name  = 'room2';
-    const room3  = new THREE.Group(); room3.name  = 'room3';
+    const room1 = new THREE.Group(); room1.name = 'room1';
+    const room2 = new THREE.Group(); room2.name = 'room2';
+    const room3 = new THREE.Group(); room3.name = 'room3';
     const shared = new THREE.Group(); shared.name = 'shared';
 
     scene.add(shared, room1, room2, room3);
     const collidableWalls = [];
 
     // ── LOADERS ──────────────────────────────────────
-    const loader     = new THREE.TextureLoader();
+    const loader = new THREE.TextureLoader();
     const gltfLoader = new GLTFLoader();
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
@@ -37,11 +37,11 @@ export function setupEnvironment(scene) {
     floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
     floorTex.repeat.set(32, 24);
     floorTex.colorSpace = THREE.SRGBColorSpace;
-    const floorMat = new THREE.MeshStandardMaterial({ 
-        map: floorTex, 
+    const floorMat = new THREE.MeshStandardMaterial({
+        map: floorTex,
         roughness: 0.15, // Rất bóng
         metalness: 0.1,
-        color: 0xcccccc 
+        color: 0xcccccc
     });
 
     // Tường màu Warm Taupe / Gallery Gray (Làm nổi bật tranh)
@@ -49,11 +49,11 @@ export function setupEnvironment(scene) {
     wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
     wallTex.repeat.set(8, 2);
     wallTex.colorSpace = THREE.SRGBColorSpace;
-    const wallMat = new THREE.MeshStandardMaterial({ 
-        map: wallTex, 
-        color: 0xdad3c8, // Màu xám ấm chuẩn Gallery
-        roughness: 0.9, 
-        metalness: 0.0 
+    const wallMat = new THREE.MeshStandardMaterial({
+        map: wallTex,
+        color: 0xCD853F, // Màu xám ấm chuẩn Gallery
+        roughness: 0.9,
+        metalness: 0.0
     });
 
     // Trần nhà
@@ -61,8 +61,8 @@ export function setupEnvironment(scene) {
     ceilingTex.wrapS = ceilingTex.wrapT = THREE.RepeatWrapping;
     ceilingTex.repeat.set(32, 24);
     ceilingTex.colorSpace = THREE.SRGBColorSpace;
-    const ceilingMat = new THREE.MeshStandardMaterial({ 
-        map: ceilingTex, 
+    const ceilingMat = new THREE.MeshStandardMaterial({
+        map: ceilingTex,
         roughness: 0.9,
         color: 0xaaaaaa // Tối đi một chút để dồn sự chú ý xuống dưới
     });
@@ -71,34 +71,34 @@ export function setupEnvironment(scene) {
     const woodTex = ceilingTex.clone();
     woodTex.needsUpdate = true;
     woodTex.repeat.set(2, 2);
-    const woodMat = new THREE.MeshStandardMaterial({ 
-        map: woodTex, 
+    const woodMat = new THREE.MeshStandardMaterial({
+        map: woodTex,
         color: 0x4a2e1b, // Gỗ màu gụ trầm
-        roughness: 0.6 
+        roughness: 0.6
     });
 
     // Các vật liệu nội thất cao cấp
-    const marbleMat  = new THREE.MeshStandardMaterial({ color: 0xfaf9f6, roughness: 0.1, metalness: 0.1 });
+    const marbleMat = new THREE.MeshStandardMaterial({ color: 0xfaf9f6, roughness: 0.1, metalness: 0.1 });
     const moldingMat = new THREE.MeshStandardMaterial({ color: 0xc8c3bc, roughness: 0.3 });
-    const plinthMat  = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5 }); // Bệ đen nhám
+    const plinthMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5 }); // Bệ đen nhám
     const lightWoodMat = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.5 }); // Gỗ walnut tối
-    const cushionMat   = new THREE.MeshStandardMaterial({ color: 0x6a0dad, roughness: 0.9 }); // Đệm nhung màu tím hoàng gia hoặc 0x800020 (Burgundy)
-    const metalMat     = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.2, metalness: 0.8 }); // Kim loại đen mờ
-    const colMat       = new THREE.MeshStandardMaterial({ color: 0xeae6df, roughness: 0.4 });
+    const cushionMat = new THREE.MeshStandardMaterial({ color: 0x6a0dad, roughness: 0.9 }); // Đệm nhung màu tím hoàng gia hoặc 0x800020 (Burgundy)
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.2, metalness: 0.8 }); // Kim loại đen mờ
+    const colMat = new THREE.MeshStandardMaterial({ color: 0xFFE4B5, roughness: 0.4 });
 
-    const seatGeo    = new THREE.BoxGeometry(2.8, 0.1, 0.75);
+    const seatGeo = new THREE.BoxGeometry(2.8, 0.1, 0.75);
     const cushionGeo = new THREE.BoxGeometry(2.6, 0.1, 0.6);
-    const legGeo     = new THREE.CylinderGeometry(0.04, 0.04, 0.9, 6);
+    const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.9, 6);
     const crossbarGeo = new THREE.BoxGeometry(2.3, 0.05, 0.05);
 
-    const shaftGeo   = new THREE.CylinderGeometry(0.35, 0.38, H - 0.5, 12);
+    const shaftGeo = new THREE.CylinderGeometry(0.35, 0.38, H - 0.5, 12);
     const capitalGeo = new THREE.BoxGeometry(1.0, 0.4, 1.0);
     const colBaseGeo = new THREE.BoxGeometry(0.9, 0.3, 0.9);
 
     function roomByX(x) {
         if (Math.abs(Math.abs(x) - 14) < 1.5) return shared;
         if (x < -15) return room1;
-        if (x >  15) return room3;
+        if (x > 15) return room3;
         return room2;
     }
 
@@ -154,15 +154,15 @@ export function setupEnvironment(scene) {
     function getUniformBox(w, h, d) {
         const geo = new THREE.BoxGeometry(w, h, d);
         const pos = geo.attributes.position;
-        const uv  = geo.attributes.uv;
+        const uv = geo.attributes.uv;
         const nor = geo.attributes.normal;
         const scale = 0.15;
         for (let i = 0; i < uv.count; i++) {
-            const x  = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+            const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
             const nx = Math.abs(nor.getX(i)), ny = Math.abs(nor.getY(i));
-            if (nx > 0.5)      uv.setXY(i, z * scale, y * scale);
+            if (nx > 0.5) uv.setXY(i, z * scale, y * scale);
             else if (ny > 0.5) uv.setXY(i, x * scale, z * scale);
-            else               uv.setXY(i, x * scale, y * scale);
+            else uv.setXY(i, x * scale, y * scale);
         }
         return geo;
     }
@@ -178,8 +178,8 @@ export function setupEnvironment(scene) {
     // ÁNH SÁNG TỔNG THỂ (MUSEUM LIGHTING)
     // =====================================================
     // Ánh sáng nền mờ nhẹ để không gian có chiều sâu, tranh tự nổi bật
-    shared.add(new THREE.AmbientLight(0xffffff, 0.5)); 
-    
+    shared.add(new THREE.AmbientLight(0xffffff, 0.5));
+
     // Ánh sáng dội từ trần và sàn nhà (Tạo sự chân thực)
     const hemiLight = new THREE.HemisphereLight(0xfff4e6, 0x222233, 0.4);
     hemiLight.position.set(0, H, 0);
@@ -197,22 +197,22 @@ export function setupEnvironment(scene) {
     // =====================================================
     // TƯỜNG (WALLS & PARTITIONS)
     // =====================================================
-    addWall(80, H, WALL_THICK, 0, -29.5, wallMat, shared);          
-    addWall(WALL_THICK, H, 58, -39.5, 0, wallMat, shared);           
-    addWall(WALL_THICK, H, 58,  39.5, 0, wallMat, shared);           
-    addWall(8,  H, WALL_THICK, 0,   29.5, wallMat, shared);
+    addWall(80, H, WALL_THICK, 0, -29.5, wallMat, shared);
+    addWall(WALL_THICK, H, 58, -39.5, 0, wallMat, shared);
+    addWall(WALL_THICK, H, 58, 39.5, 0, wallMat, shared);
+    addWall(8, H, WALL_THICK, 0, 29.5, wallMat, shared);
     addWall(36, H, WALL_THICK, -22, 29.5, wallMat, shared);
-    addWall(36, H, WALL_THICK,  22, 29.5, wallMat, shared);
-    
-    addWall(12, H, WALL_THICK, 20,  15, wallMat, shared);
+    addWall(36, H, WALL_THICK, 22, 29.5, wallMat, shared);
+
+    addWall(12, H, WALL_THICK, 20, 15, wallMat, shared);
     addWall(WALL_THICK, H, 47, -14, -5.5, wallMat, shared);
-    addWall(WALL_THICK, H,  4, -14,  27, wallMat, shared);
+    addWall(WALL_THICK, H, 4, -14, 27, wallMat, shared);
     addArch(7, WALL_THICK, -14, 6, 21.5, Math.PI / 2);
-    addWall(WALL_THICK, H, 47,  14, -5.5, wallMat, shared);
-    addWall(WALL_THICK, H,  4,  14,  27, wallMat, shared);
-    addArch(7, WALL_THICK,  14, 6, 21.5, Math.PI / 2);
+    addWall(WALL_THICK, H, 47, 14, -5.5, wallMat, shared);
+    addWall(WALL_THICK, H, 4, 14, 27, wallMat, shared);
+    addArch(7, WALL_THICK, 14, 6, 21.5, Math.PI / 2);
     addWall(9.5, H, WALL_THICK, -8.75, 15, wallMat, shared);
-    addWall(9.5, H, WALL_THICK,  8.75, 15, wallMat, shared);
+    addWall(9.5, H, WALL_THICK, 8.75, 15, wallMat, shared);
     addArch(8, WALL_THICK, 0, 6, 15, 0);
     addWall(15, H, WALL_THICK, 31.5, -5, wallMat, shared);
 
@@ -254,7 +254,7 @@ export function setupEnvironment(scene) {
         abacus.position.set(0, abacusY + 0.05, 0); g.add(abacus);
 
         g.position.set(cx, 0, cz);
-        targetGroup.add(g); 
+        targetGroup.add(g);
 
         const totalH = abacusY + 0.10;
         addBoxCollider(width + 0.60, totalH + 3.0, width + 0.60, cx, (totalH + 3.0) / 2, cz);
@@ -270,7 +270,7 @@ export function setupEnvironment(scene) {
     addBoxCollider(barrierSize, ropeWallH, 0.3, 0, ropeWallH / 2, statueZ + barrierOffset);
     addBoxCollider(barrierSize, ropeWallH, 0.3, 0, ropeWallH / 2, statueZ - barrierOffset);
     addBoxCollider(0.3, ropeWallH, barrierSize, -barrierOffset, ropeWallH / 2, statueZ);
-    addBoxCollider(0.3, ropeWallH, barrierSize,  barrierOffset, ropeWallH / 2, statueZ);
+    addBoxCollider(0.3, ropeWallH, barrierSize, barrierOffset, ropeWallH / 2, statueZ);
 
     // Đèn rọi tượng cực đẹp (Chuẩn phim trường/Bảo tàng)
     const statueLight = new THREE.SpotLight(0xfffaeb, 200); // Ánh sáng chính ấm
@@ -297,7 +297,7 @@ export function setupEnvironment(scene) {
         addBoxCollider(0.9, H, 0.9, x, H / 2, z);
     }
     addColumn(-4.5, 16.0);
-    addColumn( 4.5, 16.0);
+    addColumn(4.5, 16.0);
 
     // =====================================================
     // ROOM 1 — Left wing: statues on pedestals
@@ -342,9 +342,9 @@ export function setupEnvironment(scene) {
     // CHANDELIERS (Tạo vệt sáng đẹp mắt xuống sàn nhà)
     // =====================================================
     const chandelierPositions = [
-        [-27, -15], [-27, 0], [-27, 15],       
-        [0, -7],                                 
-        [27, -15.5], [27, 5], [27, 22],          
+        [-27, -15], [-27, 0], [-27, 15],
+        [0, -7],
+        [27, -15.5], [27, 5], [27, 22],
     ];
 
     for (const [x, z] of chandelierPositions) {
@@ -359,12 +359,12 @@ export function setupEnvironment(scene) {
     gltfLoader.load('/model/chandelier (2).glb', (gltf) => {
         const base = gltf.scene;
         base.scale.setScalar(25);
-        base.traverse(n => { 
-            if (n.isMesh) { 
-                n.castShadow = false; n.receiveShadow = false; 
+        base.traverse(n => {
+            if (n.isMesh) {
+                n.castShadow = false; n.receiveShadow = false;
                 // Tăng độ sáng vật liệu của đèn chùm
-                if(n.material) n.material.emissive = new THREE.Color(0x332211);
-            } 
+                if (n.material) n.material.emissive = new THREE.Color(0x332211);
+            }
         });
 
         for (const [x, z] of chandelierPositions) {
@@ -384,7 +384,7 @@ export function setupEnvironment(scene) {
         for (const [lx, lz] of [[-1.15, -0.3], [1.15, -0.3], [-1.15, 0.3], [1.15, 0.3]]) {
             const leg = new THREE.Mesh(legGeo, metalMat); leg.position.set(lx, 0.45, lz); g.add(leg);
         }
-        g.add(new THREE.Mesh(crossbarGeo, metalMat)); 
+        g.add(new THREE.Mesh(crossbarGeo, metalMat));
         const cb = g.children[g.children.length - 1];
         cb.position.set(0, 0.25, 0);
         g.position.set(x, 0, z);
@@ -393,17 +393,17 @@ export function setupEnvironment(scene) {
         addBoxCollider(2.8, 1.1, 0.8, x, 0.55, z, ry);
     }
 
-    addBench(-8,   14,  0);
-    addBench(12.6, 10,  Math.PI / 2);
-    addBench(12.6,  8,  Math.PI / 2);
-    addBench(-38.4, 0,  Math.PI / 2);
+    addBench(-8, 14, 0);
+    addBench(12.6, 10, Math.PI / 2);
+    addBench(12.6, 8, Math.PI / 2);
+    addBench(-38.4, 0, Math.PI / 2);
     addBench(15.1, -2, -Math.PI / 2);
-    addBench(-38.4, 8,  Math.PI / 2);
+    addBench(-38.4, 8, Math.PI / 2);
     addBench(15.1, -6, -Math.PI / 2);
-    addBench(-38.4, 4,  Math.PI / 2);
-    addBench(22,   14,  0);
-    addBench(22,   16.1, 0);
-    addBench(18,   16.1, 0);
+    addBench(-38.4, 4, Math.PI / 2);
+    addBench(22, 14, 0);
+    addBench(22, 16.1, 0);
+    addBench(18, 16.1, 0);
 
     // =====================================================
     // ROOM 3 — Display cases (Tủ trưng bày nghệ thuật)
@@ -417,13 +417,99 @@ export function setupEnvironment(scene) {
         room3.add(sl, sl.target);
     }
 
+    function addGlassCase(cx, cz, cw, cd, showPedestal = true) {
+        // ── dimensions ──────────────────────────────
+        const GLASS_H = 13.0;   // visual height of the glass enclosure
+        const PANEL_T = 0.08;   // panel thickness (thin glass look)
+        const OFFSET = 0.02;   // outward nudge to prevent z-fighting
+        const BASE_Y = 0.1;    // low-wall height — glass sits on top of it
+        const GLASS_MID = BASE_Y + GLASS_H / 2; // panel centre Y
+
+        // Collider height covers a standing player above the low wall
+        const COL_H = 4.0;
+        const COL_Y = BASE_Y + COL_H / 2;
+
+        // ── pedestal dims ────────────────────────────
+        const PED_W = Math.min(cw, cd) * 0.55;
+        const PED_D = Math.min(cw, cd) * 0.55;
+        const PED_H = 1.0;
+        const PED_Y = BASE_Y + PED_H / 2;
+
+        // ── materials ────────────────────────────────
+        const glassMat = new THREE.MeshStandardMaterial({
+            color: 0xadd8e6,
+            transparent: true,
+            opacity: 0.22,
+            roughness: 0.05,
+            metalness: 0.15,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+        });
+
+        const pedestalMat = new THREE.MeshStandardMaterial({
+            color: 0x1c1c1c,
+            roughness: 0.35,
+            metalness: 0.1,
+        });
+
+        const pedestalTopMat = new THREE.MeshStandardMaterial({
+            color: 0x2e2e2e,
+            roughness: 0.2,
+            metalness: 0.15,
+        });
+
+        // ── helper: one glass panel ───────────────────
+        function glassPanel(w, h, d, ox, oy, oz) {
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), glassMat);
+            mesh.position.set(cx + ox, oy, cz + oz);
+            room3.add(mesh);
+        }
+
+        // ── 5 glass panels ────────────────────────────
+        glassPanel(cw, GLASS_H, PANEL_T, 0, GLASS_MID, cd / 2 + OFFSET);   // Front
+        glassPanel(cw, GLASS_H, PANEL_T, 0, GLASS_MID, -cd / 2 - OFFSET);   // Back
+        glassPanel(PANEL_T, GLASS_H, cd, -cw / 2 - OFFSET, GLASS_MID, 0);    // Left
+        glassPanel(PANEL_T, GLASS_H, cd, cw / 2 + OFFSET, GLASS_MID, 0);    // Right
+        glassPanel(cw + PANEL_T * 2, PANEL_T, cd + PANEL_T * 2,               // Top
+            0, BASE_Y + GLASS_H + OFFSET, 0);
+
+        // ── collision — 4 sides at player height ──────
+        addBoxCollider(cw, COL_H, PANEL_T, cx, COL_Y, cz + cd / 2 + OFFSET); // Front
+        addBoxCollider(cw, COL_H, PANEL_T, cx, COL_Y, cz - cd / 2 - OFFSET); // Back
+        addBoxCollider(PANEL_T, COL_H, cd, cx - cw / 2 - OFFSET, COL_Y, cz);                   // Left
+        addBoxCollider(PANEL_T, COL_H, cd, cx + cw / 2 + OFFSET, COL_Y, cz);                   // Right
+
+        // ── pedestal body ─────────────────────────────
+        if (showPedestal) {
+            const pedBase = new THREE.Mesh(new THREE.BoxGeometry(PED_W, PED_H, PED_D), pedestalMat);
+            pedBase.position.set(cx, PED_Y, cz);
+            room3.add(pedBase);
+
+            const CAP_H = 0.07;
+            const pedCap = new THREE.Mesh(new THREE.BoxGeometry(PED_W + 0.12, CAP_H, PED_D + 0.12), pedestalTopMat);
+            pedCap.position.set(cx, BASE_Y + PED_H + CAP_H / 2, cz);
+            room3.add(pedCap);
+
+            const REV_H = 0.05;
+            const pedRev = new THREE.Mesh(new THREE.BoxGeometry(PED_W + 0.06, REV_H, PED_D + 0.06), pedestalTopMat);
+            pedRev.position.set(cx, BASE_Y + REV_H / 2, cz);
+            room3.add(pedRev);
+
+            // Pedestal collider
+            addBoxCollider(PED_W + 0.2, PED_H + CAP_H + 2.0, PED_D + 0.2,
+                cx, BASE_Y + (PED_H + CAP_H + 2.0) / 2, cz);
+        }
+    }
+
     const A_CW = 16, A_CX = 31.45, A_CZ = -26.5, A_CD = 5;
-    const D_CW =  5, D_CX = 36.5,  D_CZ = 14.75,  D_CD = 28.5;
+    const D_CW = 5, D_CX = 36, D_CZ = 14.75, D_CD = 28.5;
     addDisplayUnit(A_CX, A_CZ, A_CW, A_CD, ['back']);
     addDisplayUnit(D_CX, D_CZ, D_CW, D_CD, ['right']);
+    addGlassCase(A_CX, A_CZ, A_CW, A_CD, false);
+    addGlassCase(D_CX, D_CZ, D_CW, D_CD, false);
 
     addWoodWall(8.95, 16, 6, 18.0, -26.5);
-    addWoodWall(1,    15, 5.5, 22.95, -26.25);
+    addWoodWall(1, 15, 5.5, 22.95, -26.25);
 
     const topA = new THREE.Mesh(getUniformBox(16, 9, 1), woodMat);
     topA.position.set(31.45, 10.5, -24.0); room3.add(topA);
@@ -449,6 +535,7 @@ export function setupEnvironment(scene) {
     addWoodWall(16.2, LOW_WALL_H, T, 31.45, -23.7);
     addWoodWall(T, LOW_WALL_H, 5.5, 22.95, -26.25);
     addWoodWall(T, LOW_WALL_H, 29.0, 33.20, 14.5);
+
 
     return {
         collidableWalls,

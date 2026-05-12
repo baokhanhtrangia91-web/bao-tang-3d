@@ -29,7 +29,7 @@ const sharedBoxGeo = new THREE.BoxGeometry(1, 1, 1);
 
 function getRoomByX(scene, x) {
     if (x < -14) return scene.getObjectByName('room1') || scene;
-    if (x >  14) return scene.getObjectByName('room3') || scene;
+    if (x > 14) return scene.getObjectByName('room3') || scene;
     return scene.getObjectByName('room2') || scene;
 }
 
@@ -95,8 +95,8 @@ function addArt(scene, loader, opts) {
     // BÍ QUYẾT TỐI ƯU ÁNH SÁNG BẢO TÀNG:
     // Dùng emissive 0x1a1a1a để làm bức tranh tự tỏa sáng nhẹ trong phòng tối
     // giống như được chiếu spotlight mà KHÔNG tốn tài nguyên GPU xử lý đèn!
-    const artMat = new THREE.MeshStandardMaterial({ 
-        map: tex, 
+    const artMat = new THREE.MeshStandardMaterial({
+        map: tex,
         roughness: 0.4,       // Lớp vecni bóng nhẹ
         metalness: 0.05,
         emissive: new THREE.Color(isInfoBoard ? 0x0a0a0a : 0x1a1a1a), // Bảng thông tin tối hơn tranh nghệ thuật
@@ -178,12 +178,13 @@ const ARTWORKS_POSITION = [
     { id: '16', w: 6, h: 6, x: 32.9, y: 10, z: 24.3, ry: -Math.PI / 2 },
     { id: '17', w: 6, h: 6, x: 32.9, y: 10, z: 15, ry: -Math.PI / 2 },
     { id: 'm4', x: 36.7, y: 2.5, z: 24.3, ry: Math.PI * 2 / 3, scale: 6.8 },
-    { id: 'm9', x: 36.7, y: 1, z: 3, ry: 0, scale: 1.5 },
+    { id: 'm9', x: 36.7, y: 0, z: 3, ry: 0, scale: 1.5 },
     { id: 'm8', x: 36.9, y: 0, z: 15, ry: -Math.PI / 2, scale: 2.4 },
-    { id: 'm7', x: 31, y: 3, z: -26.5, ry: 0, scale: 2.5 },
-    { id: 'm10', x: 36.7, y: 1, z: 8.7, ry: 0, scale: 0.7 },
+    { id: 'm7', x: 31, y: 2.7, z: -26.5, ry: 0, scale: 2.5 },
+    { id: 'm10', x: 36.7, y: 0, z: 8.7, ry: 0, scale: 0.7 },
     { id: 'tree', x: -12, y: 0, z: 16.5, ry: 0, scale: 1.5 },
     { id: 'tree', x: 12, y: 0, z: 16.5, ry: 0, scale: 1.5 },
+    { id: 'watcher', x: 0, y: 0, z: 29.1, ry: Math.PI, scale: 1 },
 ];
 
 const GALLERY_DATA = ARTWORKS_POSITION.map(pos => {
@@ -225,14 +226,14 @@ export function loadArtworks(scene) {
                 model.position.set(item.x, item.y, item.z);
                 model.rotation.y = item.ry || 0;
                 model.scale.setScalar(item.scale || 1);
-                
+
                 model.traverse((n) => {
                     if (n.isMesh) {
                         n.castShadow = false;
                         n.receiveShadow = false;
                     }
                 });
-                
+
                 const targetRoom = getRoomByX(scene, item.x);
                 targetRoom.add(model);
             }, undefined, (err) => {
