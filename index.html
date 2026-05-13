@@ -32,11 +32,16 @@
             --font-sans: 'Josefin Sans', sans-serif;
         }
 
-        body {
-            overflow: hidden;
-            background: var(--dark);
-            cursor: none;
-        }
+        /* ✅ SAU — chỉ ẩn chuột khi đang chơi (pointer locked) */
+body {
+    overflow: hidden;
+    background: var(--dark);
+    cursor: default;
+}
+
+body.pointer-locked {
+    cursor: none;
+}
 
         /* Con trỏ tùy chỉnh */
         body::after {
