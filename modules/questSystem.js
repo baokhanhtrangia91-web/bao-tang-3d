@@ -13,10 +13,10 @@ let notificationTimeout = null;
 let isCompleted = false;
 
 // ── Khởi tạo âm thanh ──
-const achievementSound = new Audio('public/audio/0sound effects/r.mp3'); 
+const achievementSound = new Audio('/audio/0sound effects/r.mp3'); 
 achievementSound.volume = 0.7; 
 
-const finalCompletionSound = new Audio('public/audio/0sound effects/m.mp3'); 
+const finalCompletionSound = new Audio('/audio/0sound effects/m.mp3'); 
 finalCompletionSound.volume = 1.0; 
 
 // ── Elements ──

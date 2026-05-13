@@ -5,27 +5,29 @@
 //   • Mona Lisa mắt phát sáng đỏ rực + nhịp tim
 //   • Tất cả tranh nhấp nháy đỏ theo nhịp tim (lệch pha)
 //   • Đèn pin chiếu thẳng về phía trước + chớp giật ngẫu nhiên
+//   • Phím [F] bật/tắt đèn pin khi đêm
 //   • Overlay tối + âm thanh horror
 // =====================================================
 import * as THREE from 'three';
 import { interactableObjects } from './artworks.js';
 
 // ── Private State ────────────────────────────────────
-let _isNight       = false;
-let _flashlight    = null;
-let _nightAmbient  = null;
-let _allLights     = [];   // [{ light, origIntensity }]
-let _artEffects    = [];   // [{ mat, id, origEmissive, origEI }]
-let _leverMesh     = null;
-let _nightSfx      = null;
-let _overlayEl     = null;
-let _indicatorEl   = null;
-let _glowTime      = 0;
-let _flickerCD     = 0;
-let _toggleFn      = null; // set after build — referenced by hitbox userData
-let _bgMusic       = null; // nhạc nền đêm (khác với _nightSfx horror sfx)
-let _audioManager  = null; // tham chiếu tới audioManager ngày
-let _origTextStyles = [];  // [{ el, origColor, origTextShadow }]
+let _isNight        = false;
+let _flashlightOn   = true;   // trạng thái đèn pin (F để toggle)
+let _flashlight     = null;
+let _nightAmbient   = null;
+let _allLights      = [];   // [{ light, origIntensity }]
+let _artEffects     = [];   // [{ mat, id, origEmissive, origEI }]
+let _leverMesh      = null;
+let _nightSfx       = null;
+let _overlayEl      = null;
+let _indicatorEl    = null;
+let _glowTime       = 0;
+let _flickerCD      = 0;
+let _toggleFn       = null; // set after build — referenced by hitbox userData
+let _bgMusic        = null; // nhạc nền đêm (khác với _nightSfx horror sfx)
+let _audioManager   = null; // tham chiếu tới audioManager ngày
+let _origTextStyles = [];   // [{ el, origColor, origTextShadow }]
 
 // Tranh bị ảnh hưởng đặc biệt
 const MONA_LISA_ID   = '6';
@@ -49,14 +51,13 @@ export function setupNightMode(scene, camera, audioManager = null) {
     _audioManager = audioManager;
 
     // ── 1. Đèn pin ──────────────────────────────────
-    // Góc hẹp hơn, penumbra cứng hơn, màu trắng lạnh như đèn pin thật
     _flashlight = new THREE.SpotLight(
-        0xddeeff,   // màu trắng lạnh hơi xanh — đặc trưng đèn pin LED
-        0,          // tắt lúc khởi tạo
-        28,         // range xa hơn
-        Math.PI / 8.5, // góc rộng ~33° — tỏa ra như đèn phim
-        0.55,       // penumbra mềm → rìa ngoài mờ dần tự nhiên
-        1.2         // decay
+        0xddeeff,       // màu trắng lạnh hơi xanh — đặc trưng đèn pin LED
+        0,              // tắt lúc khởi tạo
+        35,             // range xa hơn
+        Math.PI / 8.5,  // góc rộng ~33°
+        0.55,           // penumbra mềm → rìa ngoài mờ dần tự nhiên
+        1.2             // decay
     );
     _flashlight.castShadow = false;
     _flashlight.position.set(0, 0, 0); // gắn đúng vào gốc camera
@@ -90,7 +91,7 @@ export function setupNightMode(scene, camera, audioManager = null) {
 
     // ── 4b. Nhạc nền đêm (tách biệt với sfx) ────────
     _bgMusic = document.createElement('audio');
-    _bgMusic.src    = 'public/audio/0sound effects/a.mp3'; // ← thay bằng đường dẫn nhạc nền của bạn
+    _bgMusic.src    = '/audio/0sound effects/a.mp3';
     _bgMusic.loop   = true;
     _bgMusic.volume = 1;
     document.body.appendChild(_bgMusic);
@@ -109,30 +110,37 @@ export function setupNightMode(scene, camera, audioManager = null) {
     });
     document.body.appendChild(_overlayEl);
 
-    // ── 6. Indicator điện (góc trên phải) ───────────
+    // ── 6. Indicator điện (góc dưới phải) ───────────
     _indicatorEl = document.createElement('div');
     _indicatorEl.id = 'power-indicator';
     Object.assign(_indicatorEl.style, {
-        position:    'fixed',
-        bottom:      '20px',
-        right:       '20px',
-        padding:     '7px 14px',
-        background:  'rgba(0,0,0,0.72)',
-        color:       '#00ff88',
-        border:      '1px solid #00cc55',
-        borderRadius:'6px',
-        fontFamily:  'monospace',
-        fontSize:    '13px',
+        position:     'fixed',
+        bottom:       '20px',
+        right:        '20px',
+        padding:      '7px 14px',
+        background:   'rgba(0,0,0,0.72)',
+        color:        '#00ff88',
+        border:       '1px solid #00cc55',
+        borderRadius: '6px',
+        fontFamily:   'monospace',
+        fontSize:     '13px',
         letterSpacing:'0.5px',
-        zIndex:      '20',
-        display:     'none',
-        transition:  'color 0.4s, border-color 0.4s',
-        textShadow:  '0 0 8px currentColor',
+        zIndex:       '20',
+        display:      'none',
+        transition:   'color 0.4s, border-color 0.4s',
+        textShadow:   '0 0 8px currentColor',
     });
     _indicatorEl.innerHTML = '⚡&nbsp;ĐIỆN: <b>BẬT</b>';
     document.body.appendChild(_indicatorEl);
 
-    // Thu thập tất cả đèn sau khi GLTF load xong (3 giây)
+    // ── 7. Phím [F] bật/tắt đèn pin ─────────────────
+    window.addEventListener('keydown', (e) => {
+        if (e.code !== 'KeyF' || e.repeat) return;
+        if (!_isNight) return; // chỉ hoạt động khi đêm
+        _toggleFlashlight();
+    });
+
+    // Thu thập tất cả đèn sau khi GLTF load xong (3.5 giây)
     setTimeout(() => {
         _collectLights(scene);
         if (_indicatorEl) _indicatorEl.style.display = 'block';
@@ -142,6 +150,25 @@ export function setupNightMode(scene, camera, audioManager = null) {
         update:            (delta) => _updateNight(delta),
         isNightModeActive: ()      => _isNight,
     };
+}
+
+// ── Bật / tắt đèn pin (phím F) ───────────────────────
+
+function _toggleFlashlight() {
+    _flashlightOn = !_flashlightOn;
+
+    if (_flashlightOn) {
+        _flashlight.intensity = 90;
+        if (_flashlight.userData.fill) _flashlight.userData.fill.intensity = 0.6;
+    } else {
+        _flashlight.intensity = 0;
+        if (_flashlight.userData.fill) _flashlight.userData.fill.intensity = 0;
+    }
+
+    _showMessage(
+        _flashlightOn ? '🔦 Đèn pin: BẬT' : '🔦 Đèn pin: TẮT',
+        _flashlightOn ? '#aaddff' : '#555566',
+    );
 }
 
 // ── Thu thập ánh sáng ────────────────────────────────
@@ -163,9 +190,9 @@ function _collectArtEffects(scene) {
             const mat = obj.material;
             _artEffects.push({
                 mat,
-                id:              obj.userData.artInfo?.id || '',
-                origEmissive:    mat.emissive.clone(),
-                origEI:          mat.emissiveIntensity ?? 1,
+                id:           obj.userData.artInfo?.id || '',
+                origEmissive: mat.emissive.clone(),
+                origEI:       mat.emissiveIntensity ?? 1,
             });
         }
     });
@@ -278,7 +305,7 @@ function _buildSwitch(scene, camera) {
     scene.add(root);
 }
 
-// ── Toggle ON/OFF ────────────────────────────────────
+// ── Toggle ON/OFF ─────────────────────────────────────
 
 function _toggle(scene, camera, switchRoot) {
     _isNight = !_isNight;
@@ -317,7 +344,8 @@ function _finalizeActivation(scene, camera, switchRoot) {
     // 2. Bật ambient đêm mờ
     _nightAmbient.intensity = 0.14;
 
-    // 3. Bật đèn pin + fill light
+    // 3. Bật đèn pin + fill light, reset state về bật
+    _flashlightOn = true;
     _flashlight.intensity = 90;
     if (_flashlight.userData.fill) _flashlight.userData.fill.intensity = 0.6;
 
@@ -343,7 +371,7 @@ function _finalizeActivation(scene, camera, switchRoot) {
     // 8. Indicator cập nhật
     _updateIndicator();
 
-    // 9b. Âm thanh horror sfx
+    // 9a. Âm thanh horror sfx
     if (_nightSfx) {
         _nightSfx.play().catch(() => {});
         _fadeAudio(_nightSfx, 0, 0.38, 2200);
@@ -372,7 +400,8 @@ function _deactivate(scene, camera, switchRoot) {
     // 2. Tắt ambient đêm
     _nightAmbient.intensity = 0;
 
-    // 3. Tắt đèn pin + fill light
+    // 3. Tắt đèn pin + fill light, reset state
+    _flashlightOn = true;
     _flashlight.intensity = 0;
     if (_flashlight.userData.fill) _flashlight.userData.fill.intensity = 0;
 
@@ -395,7 +424,7 @@ function _deactivate(scene, camera, switchRoot) {
     // 8. Indicator cập nhật
     _updateIndicator();
 
-    // 9. Tắt âm thanh horror sfx
+    // 9a. Tắt âm thanh horror sfx
     if (_nightSfx) {
         _fadeAudio(_nightSfx, _nightSfx.volume, 0, 1400, () => { _nightSfx.pause(); });
     }
@@ -429,7 +458,7 @@ function _applyHauntedArt(nightOn) {
                 mat.emissive.set(0x002800);
                 mat.emissiveIntensity = 2.0;
             } else {
-                // Tất cả tranh còn lại: cũng đỏ huyền bí (sẽ nhấp nháy trong update)
+                // Tất cả tranh còn lại: đỏ huyền bí (sẽ nhấp nháy trong update)
                 mat.emissive.set(0x440000);
                 mat.emissiveIntensity = 2.2;
             }
@@ -441,7 +470,7 @@ function _applyHauntedArt(nightOn) {
     });
 }
 
-// ── Update loop ──────────────────────────────────────
+// ── Update loop ───────────────────────────────────────
 
 function _updateNight(delta) {
     if (!_isNight) return;
@@ -461,7 +490,7 @@ function _updateNight(delta) {
             mat.emissiveIntensity = 0.9 + pulse * 2.2;
             mat.emissive.setRGB(0, 0.18 + pulse * 0.25, 0);
         } else {
-            // Tất cả tranh còn lại: nhấp nháy đỏ như Mona Lisa, lệch pha theo id
+            // Tất cả tranh còn lại: nhấp nháy đỏ, lệch pha theo id
             const offset = parseFloat(id) * 0.4 || 0;
             const pulse  = _heartbeatCurve(_glowTime * 1.1 + offset);
             mat.emissiveIntensity = 1.2 + pulse * 2.5;
@@ -469,12 +498,13 @@ function _updateNight(delta) {
         }
     });
 
-    /* Đèn pin chớp ngẫu nhiên (horror flicker) */
+    /* Đèn pin chớp ngẫu nhiên (horror flicker) — chỉ khi đèn đang bật */
     _flickerCD -= delta;
-    if (_flickerCD <= 0 && Math.random() < 0.006) {
+    if (_flashlightOn && _flickerCD <= 0 && Math.random() < 0.006) {
         _flashlight.intensity *= 0.08;
+        if (_flashlight.userData.fill) _flashlight.userData.fill.intensity = 0;
         setTimeout(() => {
-            if (_isNight) {
+            if (_isNight && _flashlightOn) {
                 _flashlight.intensity = 90;
                 if (_flashlight.userData.fill) _flashlight.userData.fill.intensity = 0.6;
             }
@@ -489,27 +519,24 @@ function _updateNight(delta) {
  */
 function _heartbeatCurve(t) {
     const phase = (t % 1.0); // 0..1
-    if (phase < 0.12) return Math.sin(phase / 0.12 * Math.PI);        // đập 1
+    if (phase < 0.12) return Math.sin(phase / 0.12 * Math.PI);             // đập 1
     if (phase < 0.28 && phase >= 0.18)
-        return Math.sin((phase - 0.18) / 0.1 * Math.PI) * 0.45;      // đập 2 nhỏ hơn
+        return Math.sin((phase - 0.18) / 0.1 * Math.PI) * 0.45;           // đập 2 nhỏ hơn
     return 0;
 }
 
-// ── Chữ đỏ máu ──────────────────────────────────────
+// ── Chữ đỏ máu ───────────────────────────────────────
 
 function _applyBloodText(nightOn) {
     if (nightOn) {
-        // Snapshot màu gốc của tất cả element có text đang hiển thị
         _origTextStyles = [];
         const all = document.querySelectorAll(
             'div, span, p, h1, h2, h3, h4, b, label, button, a, li'
         );
         all.forEach(el => {
-            // Bỏ qua element ẩn hoặc không có text thực
             if (!el.offsetParent && el.id !== 'power-indicator') return;
             if (!el.textContent.trim()) return;
 
-            const cs = window.getComputedStyle(el);
             _origTextStyles.push({
                 el,
                 origColor:      el.style.color,
@@ -517,16 +544,15 @@ function _applyBloodText(nightOn) {
                 origTransition: el.style.transition,
             });
 
-            el.style.transition  = 'color 0.6s ease, text-shadow 0.6s ease';
-            el.style.color       = '#8b0000';
-            el.style.textShadow  = '0 0 10px #ff0000, 0 0 22px #660000';
+            el.style.transition = 'color 0.6s ease, text-shadow 0.6s ease';
+            el.style.color      = '#8b0000';
+            el.style.textShadow = '0 0 10px #ff0000, 0 0 22px #660000';
         });
     } else {
-        // Khôi phục màu gốc
         _origTextStyles.forEach(({ el, origColor, origShadow, origTransition }) => {
-            el.style.transition  = 'color 0.8s ease, text-shadow 0.8s ease';
-            el.style.color       = origColor;
-            el.style.textShadow  = origShadow;
+            el.style.transition = 'color 0.8s ease, text-shadow 0.8s ease';
+            el.style.color      = origColor;
+            el.style.textShadow = origShadow;
             setTimeout(() => {
                 el.style.transition = origTransition;
             }, 900);
@@ -535,7 +561,7 @@ function _applyBloodText(nightOn) {
     }
 }
 
-// ── Helpers ──────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────
 
 function _setLED(switchRoot, powerOn) {
     const mat = switchRoot?.userData?.statusMat;
