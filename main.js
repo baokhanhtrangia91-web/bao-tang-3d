@@ -1,4 +1,3 @@
-
 import * as THREE from 'three';
 import { setupScene }       from './modules/scene.js';
 import { setupEnvironment } from './modules/environment.js';
@@ -10,7 +9,7 @@ import { setupCoordinates } from './modules/coordinates.js';
 import { setupMinimap }     from './modules/minimap.js';
 import { setupScreenshot }  from './modules/screenshot.js';
 import { setupAudio }       from './modules/audioManager.js';
-import { initQuestSystem }  from './modules/questSystem.js';
+import { initQuestSystem, showQuestHUD, hideQuestHUD } from './modules/questSystem.js';
 import { setupNightMode }   from './modules/nightMode.js';
 
 // ── Loading Manager ────────────────────────────────────
@@ -72,8 +71,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Vào game → hiện HUD nhiệm vụ
+controls.addEventListener('lock', () => {
+    showQuestHUD();
+});
+
+// Ra menu → ẩn HUD nhiệm vụ
 controls.addEventListener('unlock', () => {
     audio.pause();
+    hideQuestHUD();
 });
 
 // ── ANIMATE LOOP ────────────────────────────────────────

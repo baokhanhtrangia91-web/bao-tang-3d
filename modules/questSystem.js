@@ -58,6 +58,7 @@ function createHUD() {
             z-index: 50;
             pointer-events: none;
             font-family: Arial, Helvetica, sans-serif;
+            display: none; /* ẨN mặc định, chỉ hiện khi vào game */
         }
         .quest-hud-inner {
             background: rgba(10, 8, 4, 0.82);
@@ -342,10 +343,19 @@ export function isPaintingViewed(artInfo) {
     return artInfo && artInfo.id ? viewedPaintings.has(artInfo.id) : false;
 }
 
+// ── Hiện / ẩn HUD từ bên ngoài ──
+export function showQuestHUD() {
+    if (hudEl) hudEl.style.display = 'block';
+}
+
+export function hideQuestHUD() {
+    if (hudEl) hudEl.style.display = 'none';
+}
+
 export function initQuestSystem() {
     if (questInitialized) return;
     questInitialized = true;
-    hudEl = createHUD();
+    hudEl = createHUD(); // display: none theo mặc định trong CSS
     notifEl = createNotifEl();
     updateHUD();
 }
